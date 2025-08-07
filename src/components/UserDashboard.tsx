@@ -1,25 +1,22 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CreditCard, User, Calendar, DollarSign, Eye, EyeOff } from "lucide-react";
+import { CreditCard, User, Calendar, DollarSign, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
-interface UserDashboardProps {
-  user: {
-    email: string;
-    accountEmail: string;
-    accountPassword: string;
-    plan: {
-      name: string;
-      price: number;
-      dueDate: string;
-      status: 'active' | 'expired' | 'pending';
-    };
-  };
-}
-
-export const UserDashboard = ({ user }: UserDashboardProps) => {
+export const UserDashboard = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const { userProfile, loading } = useAuth();
+
+  if (loading || !userProfile) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Loading...</span>
+      </div>
+    );
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -54,11 +51,11 @@ export const UserDashboard = ({ user }: UserDashboardProps) => {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <Badge className={getStatusColor(user.plan.status)}>
-                {user.plan.status.toUpperCase()}
+              <Badge className={getStatusColor(userProfile.plan.status)}>
+                {userProfile.plan.status.toUpperCase()}
               </Badge>
               <div>
-                <div className="text-2xl font-bold">{user.plan.name}</div>
+                <div className="text-2xl font-bold">{userProfile.plan.name}</div>
                 <p className="text-xs text-muted-foreground">Current Plan</p>
               </div>
             </div>
@@ -74,12 +71,12 @@ export const UserDashboard = ({ user }: UserDashboardProps) => {
           <CardContent>
             <div className="space-y-3">
               <div>
-                <div className="text-2xl font-bold">${user.plan.price}/mo</div>
+                <div className="text-2xl font-bold">${userProfile.plan.price}/mo</div>
                 <p className="text-xs text-muted-foreground">Monthly Price</p>
               </div>
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm">Due: {user.plan.dueDate}</span>
+                <span className="text-sm">Due: {userProfile.plan.dueDate}</span>
               </div>
             </div>
           </CardContent>
@@ -94,7 +91,7 @@ export const UserDashboard = ({ user }: UserDashboardProps) => {
           <CardContent>
             <div className="space-y-3">
               <div>
-                <div className="text-lg font-medium break-all">{user.accountEmail}</div>
+                <div className="text-lg font-medium break-all">{userProfile.accountEmail}</div>
                 <p className="text-xs text-muted-foreground">Service Account</p>
               </div>
             </div>
@@ -115,7 +112,7 @@ export const UserDashboard = ({ user }: UserDashboardProps) => {
             <div>
               <label className="text-sm font-medium text-muted-foreground">Email</label>
               <div className="mt-1 p-3 bg-accent rounded-md border">
-                <code className="text-sm">{user.accountEmail}</code>
+                <code className="text-sm">{userProfile.accountEmail}</code>
               </div>
             </div>
             <div>
@@ -123,7 +120,7 @@ export const UserDashboard = ({ user }: UserDashboardProps) => {
               <div className="mt-1 flex items-center gap-2">
                 <div className="flex-1 p-3 bg-accent rounded-md border">
                   <code className="text-sm">
-                    {showPassword ? user.accountPassword : '••••••••••••'}
+                    {showPassword ? userProfile.accountPassword : '••••••••••••'}
                   </code>
                 </div>
                 <Button

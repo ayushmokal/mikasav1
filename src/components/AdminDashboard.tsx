@@ -2,30 +2,39 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users, DollarSign, TrendingUp, Activity } from "lucide-react";
+import { Users, DollarSign, TrendingUp, Activity, Loader2 } from "lucide-react";
+import { useUsers, useDashboardStats, useUpdateUser, useDeleteUser } from "@/hooks/useFirestore";
+import { FirebaseUser } from "@/lib/firestore";
 
-interface AdminDashboardProps {
-  users: Array<{
-    id: string;
-    email: string;
-    accountEmail: string;
-    plan: {
-      name: string;
-      price: number;
-      dueDate: string;
-      status: 'active' | 'expired' | 'pending';
-    };
-    joinDate: string;
-  }>;
-}
+export const AdminDashboard = () => {
+  const { data: users, isLoading: usersLoading } = useUsers();
+  const { stats, isLoading: statsLoading } = useDashboardStats();
+  const updateUserMutation = useUpdateUser();
+  const deleteUserMutation = useDeleteUser();
 
-export const AdminDashboard = ({ users }: AdminDashboardProps) => {
-  const totalRevenue = users
-    .filter(user => user.plan.status === 'active')
-    .reduce((sum, user) => sum + user.plan.price, 0);
+  const handleEditUser = (user: FirebaseUser) => {
+    // TODO: Implement edit user modal/form
+    console.log('Edit user:', user);
+  };
 
-  const activeUsers = users.filter(user => user.plan.status === 'active').length;
-  const totalUsers = users.length;
+  const handleDeleteUser = async (userId: string) => {
+    if (confirm('Are you sure you want to delete this user?')) {
+      try {
+        await deleteUserMutation.mutateAsync(userId);
+      } catch (error) {
+        console.error('Error deleting user:', error);
+      }
+    }
+  };
+
+  if (usersLoading || statsLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Loading dashboard...</span>
+      </div>
+    );
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -60,9 +69,9 @@ export const AdminDashboard = ({ users }: AdminDashboardProps) => {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalUsers}</div>
+            <div className="text-2xl font-bold">{stats.totalUsers}</div>
             <p className="text-xs text-muted-foreground">
-              +{Math.floor(totalUsers * 0.2)} from last month
+              +{Math.floor(stats.totalUsers * 0.2)} from last month
             </p>
           </CardContent>
         </Card>
@@ -73,9 +82,9 @@ export const AdminDashboard = ({ users }: AdminDashboardProps) => {
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{activeUsers}</div>
+            <div className="text-2xl font-bold">{stats.activeUsers}</div>
             <p className="text-xs text-muted-foreground">
-              {((activeUsers / totalUsers) * 100).toFixed(1)}% active rate
+              {stats.totalUsers > 0 ? ((stats.activeUsers / stats.totalUsers) * 100).toFixed(1) : 0}% active rate
             </p>
           </CardContent>
         </Card>
@@ -86,7 +95,7 @@ export const AdminDashboard = ({ users }: AdminDashboardProps) => {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalRevenue}</div>
+            <div className="text-2xl font-bold">${stats.totalRevenue}</div>
             <p className="text-xs text-muted-foreground">
               +12% from last month
             </p>
@@ -99,7 +108,7 @@ export const AdminDashboard = ({ users }: AdminDashboardProps) => {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+12.5%</div>
+            <div className="text-2xl font-bold">+{stats.growthRate}%</div>
             <p className="text-xs text-muted-foreground">
               Month over month
             </p>
@@ -126,7 +135,7 @@ export const AdminDashboard = ({ users }: AdminDashboardProps) => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {users.map((user) => (
+              {users?.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell className="font-medium">{user.email}</TableCell>
                   <TableCell>{user.accountEmail}</TableCell>
@@ -140,11 +149,20 @@ export const AdminDashboard = ({ users }: AdminDashboardProps) => {
                   <TableCell>{user.plan.dueDate}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleEditUser(user)}
+                      >
                         Edit
                       </Button>
-                      <Button variant="outline" size="sm">
-                        View
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleDeleteUser(user.id!)}
+                        disabled={deleteUserMutation.isPending}
+                      >
+                        Delete
                       </Button>
                     </div>
                   </TableCell>

@@ -1,73 +1,160 @@
-# Welcome to your Lovable project
+# SubVault - Subscription Management Platform
 
-## Project info
+A modern React application for managing subscription services with Firebase backend integration.
 
-**URL**: https://lovable.dev/projects/5026b6a9-b5da-450f-b3e1-cf1f003f2a11
+## Features
 
-## How can I edit this code?
+- **User Authentication**: Email/password authentication with Firebase Auth
+- **Role-based Access Control**: Separate dashboards for users and administrators
+- **User Management**: Admin panel for managing all users and subscriptions
+- **Real-time Data**: Firebase Firestore for real-time data synchronization
+- **Responsive Design**: Modern UI with Tailwind CSS and shadcn/ui components
 
-There are several ways of editing your application.
+## Technologies Used
 
-**Use Lovable**
+- **Frontend**: React 18, TypeScript, Vite
+- **Backend**: Firebase (Authentication, Firestore, Storage)
+- **UI Components**: shadcn/ui, Tailwind CSS
+- **State Management**: TanStack Query (React Query)
+- **Routing**: React Router DOM
+- **Build Tool**: Vite
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/5026b6a9-b5da-450f-b3e1-cf1f003f2a11) and start prompting.
+## Quick Start
 
-Changes made via Lovable will be committed automatically to this repo.
+### Prerequisites
 
-**Use your preferred IDE**
+- Node.js & npm installed
+- Firebase project set up (see [Firebase Setup Guide](./FIREBASE_SETUP.md))
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+### Installation
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
+# Clone the repository
 git clone <YOUR_GIT_URL>
 
-# Step 2: Navigate to the project directory.
+# Navigate to the project directory
 cd <YOUR_PROJECT_NAME>
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Install dependencies
+npm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Copy environment file and configure Firebase
+cp .env.example .env.local
+# Edit .env.local with your Firebase configuration
+
+# Start development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+### Firebase Setup
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+1. Create a Firebase project at [Firebase Console](https://console.firebase.google.com/)
+2. Enable Authentication with Email/Password provider
+3. Create a Firestore database
+4. Configure environment variables in `.env.local`
 
-**Use GitHub Codespaces**
+For detailed setup instructions, see [FIREBASE_SETUP.md](./FIREBASE_SETUP.md)
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Project Structure
 
-## What technologies are used for this project?
+```
+src/
+├── components/
+│   ├── auth/                 # Authentication components
+│   ├── ui/                   # shadcn/ui components
+│   ├── AdminDashboard.tsx    # Admin dashboard
+│   ├── UserDashboard.tsx     # User dashboard
+│   └── Navigation.tsx        # Navigation sidebar
+├── contexts/
+│   └── AuthContext.tsx       # Authentication context
+├── hooks/
+│   └── useFirestore.ts       # Custom Firestore hooks
+├── lib/
+│   ├── firebase.ts           # Firebase configuration
+│   ├── auth.ts              # Authentication functions
+│   ├── firestore.ts         # Firestore operations
+│   └── utils.ts             # Utility functions
+├── pages/
+│   ├── Index.tsx            # Main dashboard page
+│   ├── Login.tsx            # Login/signup page
+│   ├── NotFound.tsx         # 404 page
+│   └── Unauthorized.tsx     # Unauthorized access page
+└── App.tsx                  # Main app component
+```
 
-This project is built with:
+## Available Scripts
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm run lint` - Run ESLint
 
-## How can I deploy this project?
+## Authentication Flow
 
-Simply open [Lovable](https://lovable.dev/projects/5026b6a9-b5da-450f-b3e1-cf1f003f2a11) and click on Share -> Publish.
+1. Users sign up/sign in with email and password
+2. User profiles are automatically created in Firestore
+3. Role-based access control determines dashboard view
+4. Protected routes ensure authenticated access
 
-## Can I connect a custom domain to my Lovable project?
+## User Roles
 
-Yes, you can!
+- **User**: Can view and manage their own subscription details
+- **Admin**: Can manage all users, view analytics, and perform administrative tasks
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## Data Models
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+### User Document (Firestore)
+```typescript
+{
+  uid: string;              // Firebase Auth UID
+  email: string;            // User email
+  displayName?: string;     // Optional display name
+  role: 'user' | 'admin';   // User role
+  accountEmail: string;     // Service account email
+  accountPassword: string;  // Service account password
+  plan: {
+    name: string;           // Plan name
+    price: number;          // Monthly price
+    dueDate: string;        // Due date
+    status: 'active' | 'expired' | 'pending';
+  };
+  joinDate: string;         // Join date
+  createdAt: Timestamp;     // Creation timestamp
+  updatedAt: Timestamp;     // Last update timestamp
+}
+```
+
+## Security
+
+- Environment variables for sensitive configuration
+- Firestore security rules for data protection
+- Role-based access control
+- Protected routes and authentication guards
+
+## Deployment
+
+The application can be deployed to various platforms:
+
+- **Lovable**: Click Share → Publish in the Lovable dashboard
+- **Vercel**: Connect your GitHub repository
+- **Netlify**: Deploy via Git integration
+- **Firebase Hosting**: Use Firebase CLI
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## Support
+
+For issues and questions:
+- Check the [Firebase Setup Guide](./FIREBASE_SETUP.md)
+- Review the project documentation
+- Open an issue on GitHub
+
+## License
+
+This project is built with Lovable and follows standard open-source practices.

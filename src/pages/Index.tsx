@@ -2,73 +2,32 @@ import { useState } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { UserDashboard } from '@/components/UserDashboard';
 import { AdminDashboard } from '@/components/AdminDashboard';
-import { Button } from '@/components/ui/button';
+import { DebugPanel } from '@/components/DebugPanel';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Index = () => {
-  // Demo state - in real app this would come from authentication
-  const [userRole, setUserRole] = useState<'user' | 'admin'>('user');
+  const { isAdmin, loading, currentUser, userProfile } = useAuth();
   const [currentView, setCurrentView] = useState('dashboard');
 
-  // Mock data
-  const mockUser = {
-    email: 'john@example.com',
-    accountEmail: 'john.doe@netflix.com',
-    accountPassword: 'SecurePass123!',
-    plan: {
-      name: 'Premium',
-      price: 29.99,
-      dueDate: '2024-08-15',
-      status: 'active' as const,
-    },
-  };
+  // Show debug panel if we're stuck loading or have auth but no profile
+  const showDebug = loading || (currentUser && !userProfile);
 
-  const mockUsers = [
-    {
-      id: '1',
-      email: 'john@example.com',
-      accountEmail: 'john.doe@netflix.com',
-      plan: {
-        name: 'Premium',
-        price: 29.99,
-        dueDate: '2024-08-15',
-        status: 'active' as const,
-      },
-      joinDate: '2024-01-15',
-    },
-    {
-      id: '2',
-      email: 'jane@example.com',
-      accountEmail: 'jane.smith@spotify.com',
-      plan: {
-        name: 'Basic',
-        price: 9.99,
-        dueDate: '2024-08-20',
-        status: 'active' as const,
-      },
-      joinDate: '2024-02-10',
-    },
-    {
-      id: '3',
-      email: 'bob@example.com',
-      accountEmail: 'bob.wilson@hulu.com',
-      plan: {
-        name: 'Pro',
-        price: 19.99,
-        dueDate: '2024-07-30',
-        status: 'expired' as const,
-      },
-      joinDate: '2023-12-05',
-    },
-  ];
+  if (showDebug) {
+    return (
+      <div className="min-h-screen bg-background p-8">
+        <DebugPanel />
+      </div>
+    );
+  }
 
   const renderContent = () => {
-    if (userRole === 'admin') {
+    if (isAdmin) {
       switch (currentView) {
         case 'dashboard':
-          return <AdminDashboard users={mockUsers} />;
+          return <AdminDashboard />;
         case 'users':
-          return <AdminDashboard users={mockUsers} />;
+          return <AdminDashboard />;
         case 'settings':
           return (
             <Card className="bg-gradient-card shadow-card border-0">
@@ -81,12 +40,12 @@ const Index = () => {
             </Card>
           );
         default:
-          return <AdminDashboard users={mockUsers} />;
+          return <AdminDashboard />;
       }
     } else {
       switch (currentView) {
         case 'dashboard':
-          return <UserDashboard user={mockUser} />;
+          return <UserDashboard />;
         case 'settings':
           return (
             <Card className="bg-gradient-card shadow-card border-0">
@@ -99,7 +58,7 @@ const Index = () => {
             </Card>
           );
         default:
-          return <UserDashboard user={mockUser} />;
+          return <UserDashboard />;
       }
     }
   };
@@ -107,30 +66,11 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background flex">
       <Navigation 
-        userRole={userRole} 
         currentView={currentView} 
         onViewChange={setCurrentView} 
       />
       
       <div className="flex-1 p-8">
-        {/* Demo Role Switcher */}
-        <div className="mb-6 flex gap-2">
-          <Button
-            variant={userRole === 'user' ? 'default' : 'outline'}
-            onClick={() => setUserRole('user')}
-            size="sm"
-          >
-            User View
-          </Button>
-          <Button
-            variant={userRole === 'admin' ? 'default' : 'outline'}
-            onClick={() => setUserRole('admin')}
-            size="sm"
-          >
-            Admin View
-          </Button>
-        </div>
-
         {renderContent()}
       </div>
     </div>

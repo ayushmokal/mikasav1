@@ -1,14 +1,24 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { LayoutDashboard, Users, Settings, LogOut } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { logout } from "@/lib/auth";
 
 interface NavigationProps {
-  userRole: 'user' | 'admin';
   currentView: string;
   onViewChange: (view: string) => void;
 }
 
-export const Navigation = ({ userRole, currentView, onViewChange }: NavigationProps) => {
+export const Navigation = ({ currentView, onViewChange }: NavigationProps) => {
+  const { isAdmin } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
   const userNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'settings', label: 'Settings', icon: Settings },
@@ -20,7 +30,7 @@ export const Navigation = ({ userRole, currentView, onViewChange }: NavigationPr
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
-  const navItems = userRole === 'admin' ? adminNavItems : userNavItems;
+  const navItems = isAdmin ? adminNavItems : userNavItems;
 
   return (
     <Card className="w-64 h-screen bg-gradient-card shadow-elevated border-0 rounded-none">
@@ -30,7 +40,7 @@ export const Navigation = ({ userRole, currentView, onViewChange }: NavigationPr
             SubVault
           </h2>
           <p className="text-sm text-muted-foreground">
-            {userRole === 'admin' ? 'Admin Panel' : 'User Portal'}
+            {isAdmin ? 'Admin Panel' : 'User Portal'}
           </p>
         </div>
         
@@ -61,7 +71,7 @@ export const Navigation = ({ userRole, currentView, onViewChange }: NavigationPr
           <Button
             variant="ghost"
             className="w-full justify-start gap-3 text-muted-foreground hover:text-foreground"
-            onClick={() => {/* Handle logout */}}
+            onClick={handleLogout}
           >
             <LogOut className="h-4 w-4" />
             Sign Out
