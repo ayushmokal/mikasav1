@@ -40,15 +40,66 @@ export const signUp = async (email: string, password: string, displayName?: stri
 // Sign in with email and password
 export const signIn = async (email: string, password: string): Promise<AuthUser> => {
   try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
-    
-    return {
-      uid: user.uid,
-      email: user.email!,
-      displayName: user.displayName || undefined,
-      role: 'user' // This would typically be fetched from Firestore
-    };
+    // First, try normal sign in
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      
+      return {
+        uid: user.uid,
+        email: user.email!,
+        displayName: user.displayName || undefined,
+        role: 'user' // This would typically be fetched from Firestore
+      };
+    } catch (signInError: any) {
+      // If sign in fails, check if it's because the user doesn't exist in Firebase Auth
+      if (signInError.code === 'auth/user-not-found' || signInError.code === 'auth/invalid-credential') {
+        console.log('User not found in Firebase Auth, checking if user exists in Firestore...');
+        
+        // Check if user exists in Firestore with this email
+        const { collection, query, where, getDocs } = await import('firebase/firestore');
+        const { db } = await import('./firebase');
+        
+        const q = query(collection(db, 'users'), where('email', '==', email));
+        const querySnapshot = await getDocs(q);
+        
+        if (!querySnapshot.empty) {
+          const userDoc = querySnapshot.docs[0];
+          const userData = userDoc.data();
+          
+          // Check if password matches (for test users, password equals email)
+          if (password === email || password === userData.accountPassword) {
+            console.log('Creating Firebase Auth account for existing user...');
+            
+            // Create Firebase Auth account
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const newUser = userCredential.user;
+            
+            // Update the user document with the real UID
+            const { updateDoc, doc } = await import('firebase/firestore');
+            await updateDoc(doc(db, 'users', userDoc.id), {
+              uid: newUser.uid,
+              updatedAt: new Date()
+            });
+            
+            console.log('Firebase Auth account created and user document updated');
+            
+            return {
+              uid: newUser.uid,
+              email: newUser.email!,
+              displayName: newUser.displayName || userData.displayName || undefined,
+              role: userData.role || 'user'
+            };
+          } else {
+            throw new Error('Invalid password');
+          }
+        } else {
+          throw signInError; // Re-throw original error if user doesn't exist in Firestore
+        }
+      } else {
+        throw signInError; // Re-throw other auth errors
+      }
+    }
   } catch (error) {
     throw error;
   }

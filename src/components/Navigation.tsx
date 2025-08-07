@@ -10,7 +10,7 @@ interface NavigationProps {
 }
 
 export const Navigation = ({ currentView, onViewChange }: NavigationProps) => {
-  const { isAdmin } = useAuth();
+  const { isAdmin, userProfile, currentUser } = useAuth();
 
   const handleLogout = async () => {
     try {
@@ -42,6 +42,13 @@ export const Navigation = ({ currentView, onViewChange }: NavigationProps) => {
           <p className="text-sm text-muted-foreground">
             {isAdmin ? 'Admin Panel' : 'User Portal'}
           </p>
+          {userProfile && (
+            <div className="mt-2 p-2 bg-accent rounded-md">
+              <p className="text-xs text-muted-foreground">Logged in as:</p>
+              <p className="text-sm font-medium">{userProfile.email}</p>
+              <p className="text-xs text-muted-foreground">Role: {userProfile.role}</p>
+            </div>
+          )}
         </div>
         
         <nav className="space-y-2">

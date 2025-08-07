@@ -45,12 +45,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           // Fetch user profile from Firestore
           const profile = await getUserByUid(user.uid);
           console.log('User profile found:', profile); // Debug log
+          console.log('User role:', profile?.role); // Debug log for role
           setUserProfile(profile);
           
           // If no profile exists, create one
           if (!profile) {
-            console.log('No user profile found, creating one...'); // Debug log
-            // This shouldn't happen in normal flow, but let's handle it
+            console.log('No user profile found for UID:', user.uid); // Debug log
             setUserProfile(null);
           }
         } catch (error) {
@@ -68,6 +68,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   const isAdmin = userProfile?.role === 'admin';
+  console.log('User profile role:', userProfile?.role, 'isAdmin:', isAdmin); // Debug log
 
   const value = {
     currentUser,

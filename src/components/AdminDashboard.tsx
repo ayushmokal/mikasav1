@@ -1,20 +1,31 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users, DollarSign, TrendingUp, Activity, Loader2 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Users, DollarSign, TrendingUp, Activity, Loader2, Bell, UserPlus, Settings } from "lucide-react";
 import { useUsers, useDashboardStats, useUpdateUser, useDeleteUser } from "@/hooks/useFirestore";
 import { FirebaseUser } from "@/lib/firestore";
+import { CreateUserModal } from "@/components/modals/CreateUserModal";
+import { EditUserModal } from "@/components/modals/EditUserModal";
+import { RemindersManagement } from "@/components/RemindersManagement";
+import { SubscriptionAccountManagement } from "@/components/SubscriptionAccountManagement";
+import { format, parseISO } from 'date-fns';
 
 export const AdminDashboard = () => {
   const { data: users, isLoading: usersLoading } = useUsers();
   const { stats, isLoading: statsLoading } = useDashboardStats();
   const updateUserMutation = useUpdateUser();
   const deleteUserMutation = useDeleteUser();
+  
+  const [createUserModalOpen, setCreateUserModalOpen] = useState(false);
+  const [editUserModalOpen, setEditUserModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<FirebaseUser | null>(null);
 
   const handleEditUser = (user: FirebaseUser) => {
-    // TODO: Implement edit user modal/form
-    console.log('Edit user:', user);
+    setSelectedUser(user);
+    setEditUserModalOpen(true);
   };
 
   const handleDeleteUser = async (userId: string) => {
@@ -25,6 +36,14 @@ export const AdminDashboard = () => {
         console.error('Error deleting user:', error);
       }
     }
+  };
+
+  const getDaysUntilDue = (dueDate: string) => {
+    const due = parseISO(dueDate);
+    const today = new Date();
+    const diffTime = due.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
   };
 
   if (usersLoading || statsLoading) {
@@ -58,7 +77,13 @@ export const AdminDashboard = () => {
             Manage users and monitor subscription metrics
           </p>
         </div>
-        <Button className="bg-gradient-primary">Add New User</Button>
+        <Button 
+          className="bg-gradient-primary"
+          onClick={() => setCreateUserModalOpen(true)}
+        >
+          <UserPlus className="mr-2 h-4 w-4" />
+          Add New User
+        </Button>
       </div>
 
       {/* Metrics Cards */}
@@ -95,7 +120,7 @@ export const AdminDashboard = () => {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${stats.totalRevenue}</div>
+            <div className="text-2xl font-bold">₹{stats.totalRevenue}</div>
             <p className="text-xs text-muted-foreground">
               +12% from last month
             </p>
@@ -116,62 +141,130 @@ export const AdminDashboard = () => {
         </Card>
       </div>
 
-      {/* Users Table */}
-      <Card className="bg-gradient-card shadow-card border-0">
-        <CardHeader>
-          <CardTitle>User Management</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>User Email</TableHead>
-                <TableHead>Account Email</TableHead>
-                <TableHead>Plan</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Due Date</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users?.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium">{user.email}</TableCell>
-                  <TableCell>{user.accountEmail}</TableCell>
-                  <TableCell>{user.plan.name}</TableCell>
-                  <TableCell>${user.plan.price}/mo</TableCell>
-                  <TableCell>
-                    <Badge className={getStatusColor(user.plan.status)}>
-                      {user.plan.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{user.plan.dueDate}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleEditUser(user)}
-                      >
-                        Edit
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleDeleteUser(user.id!)}
-                        disabled={deleteUserMutation.isPending}
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      {/* Main Content Tabs */}
+      <Tabs defaultValue="users" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="users">User Management</TabsTrigger>
+          <TabsTrigger value="accounts">
+            <Settings className="mr-2 h-4 w-4" />
+            Subscription Accounts
+          </TabsTrigger>
+          <TabsTrigger value="reminders">
+            <Bell className="mr-2 h-4 w-4" />
+            Reminders
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="users" className="space-y-4">
+          <Card className="bg-gradient-card shadow-card border-0">
+            <CardHeader>
+              <CardTitle>User Management</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {users && users.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>User Email</TableHead>
+                      <TableHead>Account Email</TableHead>
+                      <TableHead>Plan</TableHead>
+                      <TableHead>Price</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Due Date</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {users.map((user) => {
+                      const daysUntilDue = getDaysUntilDue(user.plan.dueDate);
+                      const isNearDue = daysUntilDue <= 7 && daysUntilDue >= 0;
+                      const isOverdue = daysUntilDue < 0;
+                      
+                      return (
+                        <TableRow key={user.id}>
+                          <TableCell className="font-medium">{user.email}</TableCell>
+                          <TableCell>{user.accountEmail}</TableCell>
+                          <TableCell>{user.plan.name}</TableCell>
+                          <TableCell>₹{user.plan.price}/mo</TableCell>
+                          <TableCell>
+                            <Badge className={getStatusColor(user.plan.status)}>
+                              {user.plan.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-col">
+                              <span className={isOverdue ? 'text-red-600 font-semibold' : isNearDue ? 'text-yellow-600 font-semibold' : ''}>
+                                {format(parseISO(user.plan.dueDate), 'MMM dd, yyyy')}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {isOverdue 
+                                  ? `${Math.abs(daysUntilDue)} days overdue`
+                                  : `${daysUntilDue} days left`
+                                }
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-2">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleEditUser(user)}
+                              >
+                                Edit
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleDeleteUser(user.id!)}
+                                disabled={deleteUserMutation.isPending}
+                              >
+                                Delete
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              ) : (
+                <div className="text-center py-8">
+                  <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold">No users found</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Get started by creating your first user.
+                  </p>
+                  <Button onClick={() => setCreateUserModalOpen(true)}>
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Create First User
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="accounts">
+          <SubscriptionAccountManagement />
+        </TabsContent>
+
+        <TabsContent value="reminders">
+          <RemindersManagement />
+        </TabsContent>
+      </Tabs>
+
+      {/* Modals */}
+      <CreateUserModal 
+        open={createUserModalOpen} 
+        onOpenChange={setCreateUserModalOpen} 
+      />
+      
+      <EditUserModal 
+        open={editUserModalOpen} 
+        onOpenChange={setEditUserModalOpen}
+        user={selectedUser}
+      />
     </div>
   );
 };

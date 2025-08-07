@@ -4,11 +4,20 @@ import {
   getAllUsers, 
   getUserById, 
   createUser, 
+  createUserWithAuth,
   updateUser, 
   deleteUser, 
   updateUserPlan,
   getUsersByPlanStatus,
-  FirebaseUser 
+  FirebaseUser,
+  getReminders,
+  getPendingReminders,
+  createReminder,
+  updateReminder,
+  deleteReminder,
+  markReminderAsSent,
+  getUserReminders,
+  Reminder
 } from '@/lib/firestore';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -49,6 +58,21 @@ export const useCreateUser = () => {
   
   return useMutation({
     mutationFn: createUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+  });
+};
+
+// Hook to create a new user with Firebase Auth
+export const useCreateUserWithAuth = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ userData, password }: { 
+      userData: Omit<FirebaseUser, 'id' | 'createdAt' | 'updatedAt' | 'uid'>;
+      password: string;
+    }) => createUserWithAuth(userData, password),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
     },
@@ -130,4 +154,260 @@ export const useDashboardStats = () => {
     stats,
     isLoading,
   };
+};
+
+// Reminder hooks
+export const useReminders = () => {
+  const { isAdmin } = useAuth();
+  
+  return useQuery({
+    queryKey: ['reminders'],
+    queryFn: getReminders,
+    enabled: isAdmin,
+  });
+};
+
+export const usePendingReminders = () => {
+  const { isAdmin } = useAuth();
+  
+  return useQuery({
+    queryKey: ['reminders', 'pending'],
+    queryFn: getPendingReminders,
+    enabled: isAdmin,
+  });
+};
+
+export const useUserReminders = (userId: string) => {
+  return useQuery({
+    queryKey: ['reminders', 'user', userId],
+    queryFn: () => getUserReminders(userId),
+    enabled: !!userId,
+  });
+};
+
+export const useCreateReminder = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: createReminder,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reminders'] });
+    },
+  });
+};
+
+export const useUpdateReminder = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ id, updates }: { id: string; updates: Partial<Reminder> }) =>
+      updateReminder(id, updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reminders'] });
+    },
+  });
+};
+
+export const useDeleteReminder = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: deleteReminder,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reminders'] });
+    },
+  });
+};
+
+export const useMarkReminderAsSent = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: markReminderAsSent,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reminders'] });
+    },
+  });
+};
+
+// =============================================
+// SUBSCRIPTION PLAN HOOKS
+// =============================================
+
+import { 
+  createSubscriptionPlan, 
+  getSubscriptionPlans, 
+  updateSubscriptionPlan, 
+  deleteSubscriptionPlan,
+  createSharedAccount,
+  getSharedAccounts,
+  getSharedAccountsByPlan,
+  updateSharedAccount,
+  deleteSharedAccount,
+  assignAccountToUser,
+  unassignAccountFromUser,
+  getAssignmentsByUser,
+  getAssignmentsByAccount
+} from '@/lib/firestore';
+import { SubscriptionPlan, SharedAccount, AccountAssignment } from '@/lib/types';
+
+// Hook to get all subscription plans
+export const useSubscriptionPlans = () => {
+  return useQuery({
+    queryKey: ['subscriptionPlans'],
+    queryFn: getSubscriptionPlans,
+  });
+};
+
+// Hook to create a subscription plan
+export const useCreateSubscriptionPlan = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (planData: Omit<SubscriptionPlan, 'id' | 'createdAt' | 'updatedAt'>) =>
+      createSubscriptionPlan(planData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['subscriptionPlans'] });
+    },
+  });
+};
+
+// Hook to update a subscription plan
+export const useUpdateSubscriptionPlan = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ id, updates }: { id: string; updates: Partial<SubscriptionPlan> }) =>
+      updateSubscriptionPlan(id, updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['subscriptionPlans'] });
+    },
+  });
+};
+
+// Hook to delete a subscription plan
+export const useDeleteSubscriptionPlan = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: deleteSubscriptionPlan,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['subscriptionPlans'] });
+    },
+  });
+};
+
+// =============================================
+// SHARED ACCOUNT HOOKS
+// =============================================
+
+// Hook to get all shared accounts
+export const useSharedAccounts = () => {
+  return useQuery({
+    queryKey: ['sharedAccounts'],
+    queryFn: getSharedAccounts,
+  });
+};
+
+// Hook to get shared accounts by plan
+export const useSharedAccountsByPlan = (planId: string) => {
+  return useQuery({
+    queryKey: ['sharedAccounts', 'plan', planId],
+    queryFn: () => getSharedAccountsByPlan(planId),
+    enabled: !!planId,
+  });
+};
+
+// Hook to create a shared account
+export const useCreateSharedAccount = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (accountData: Omit<SharedAccount, 'id' | 'createdAt' | 'updatedAt'>) =>
+      createSharedAccount(accountData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sharedAccounts'] });
+    },
+  });
+};
+
+// Hook to update a shared account
+export const useUpdateSharedAccount = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ id, updates }: { id: string; updates: Partial<SharedAccount> }) =>
+      updateSharedAccount(id, updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sharedAccounts'] });
+    },
+  });
+};
+
+// Hook to delete a shared account
+export const useDeleteSharedAccount = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: deleteSharedAccount,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sharedAccounts'] });
+    },
+  });
+};
+
+// =============================================
+// ACCOUNT ASSIGNMENT HOOKS
+// =============================================
+
+// Hook to assign account to user
+export const useAssignAccount = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ userId, userEmail, accountId, planId }: { 
+      userId: string; 
+      userEmail: string; 
+      accountId: string; 
+      planId: string; 
+    }) => assignAccountToUser(userId, userEmail, accountId, planId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sharedAccounts'] });
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['accountAssignments'] });
+    },
+  });
+};
+
+// Hook to unassign account from user
+export const useUnassignAccount = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ userId, accountId }: { userId: string; accountId: string }) =>
+      unassignAccountFromUser(userId, accountId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sharedAccounts'] });
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['accountAssignments'] });
+    },
+  });
+};
+
+// Hook to get assignments by user
+export const useAssignmentsByUser = (userId: string) => {
+  return useQuery({
+    queryKey: ['accountAssignments', 'user', userId],
+    queryFn: () => getAssignmentsByUser(userId),
+    enabled: !!userId,
+  });
+};
+
+// Hook to get assignments by account
+export const useAssignmentsByAccount = (accountId: string) => {
+  return useQuery({
+    queryKey: ['accountAssignments', 'account', accountId],
+    queryFn: () => getAssignmentsByAccount(accountId),
+    enabled: !!accountId,
+  });
 };
