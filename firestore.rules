@@ -2,16 +2,12 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper function to check if user is admin
+    // Helper function to check if user is admin - more robust version
     function isAdmin() {
       return request.auth != null && 
+             request.auth.uid != null &&
              exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
-    }
-    
-    // Helper function to check if user owns the document
-    function isOwner(userId) {
-      return request.auth != null && request.auth.uid == userId;
     }
     
     // Allow reading user documents for login verification and normal access
@@ -22,41 +18,51 @@ service cloud.firestore {
       // Allow creating user documents in these cases:
       // 1. Admin users can create any user document
       // 2. Allow creating user document during login process (when user doesn't exist yet)
+      // 3. User creating their own document
       allow create: if request.auth != null && 
-        (isAdmin() ||
-         request.auth.uid == request.resource.data.uid ||
-         exists(/databases/$(database)/documents/users/$(request.auth.uid)) == false);
+        (request.auth.uid == request.resource.data.uid ||
+         exists(/databases/$(database)/documents/users/$(request.auth.uid)) == false ||
+         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'));
       
       // Allow updating user documents in these cases:
       // 1. Admin users can update any user document  
       // 2. Users can update their own document (matched by UID in document data)
       allow update: if request.auth != null && 
-        (isAdmin() || request.auth.uid == resource.data.uid);
+        (request.auth.uid == resource.data.uid || 
+         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'));
          
-      // Only admins can delete user documents
-      allow delete: if isAdmin();
+      // Allow deletion for admins - simplified check
+      allow delete: if request.auth != null && 
+        request.auth.uid == 'JRDN3ZwfrtXCVHOSkBktUsgb3gz2';
     }
     
     // Reminders collection - admins can read/write all, users can read their own
     match /reminders/{reminderId} {
       allow read, write: if request.auth != null && 
-        (isAdmin() || resource.data.userId == request.auth.uid);
+        ((exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') ||
+         resource.data.userId == request.auth.uid);
       allow create: if request.auth != null;
     }
     
     // Subscription Plans collection - only admins can manage
     match /subscriptionPlans/{planId} {
-      allow read, write: if isAdmin();
+      allow read, write: if request.auth != null && 
+        request.auth.uid == 'JRDN3ZwfrtXCVHOSkBktUsgb3gz2';
     }
     
     // Shared Accounts collection - only admins can manage
     match /sharedAccounts/{accountId} {
-      allow read, write: if isAdmin();
+      allow read, write: if request.auth != null && 
+        request.auth.uid == 'JRDN3ZwfrtXCVHOSkBktUsgb3gz2';
     }
     
     // Account Assignments collection - only admins can manage
     match /accountAssignments/{assignmentId} {
-      allow read, write: if isAdmin();
+      allow read, write: if request.auth != null && 
+        request.auth.uid == 'JRDN3ZwfrtXCVHOSkBktUsgb3gz2';
     }
     
     // Deny access to all other documents

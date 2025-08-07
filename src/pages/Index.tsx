@@ -10,10 +10,8 @@ const Index = () => {
   const { isAdmin, loading, currentUser, userProfile } = useAuth();
   const [currentView, setCurrentView] = useState('dashboard');
 
-  // Show debug panel if we're stuck loading or have auth but no profile
-  const showDebug = loading || (currentUser && !userProfile);
-
-  if (showDebug) {
+  // Only show debug panel during loading, not for missing profiles
+  if (loading) {
     return (
       <div className="min-h-screen bg-background p-8">
         <DebugPanel />
@@ -21,8 +19,42 @@ const Index = () => {
     );
   }
 
+  // If user is authenticated but has no profile, show a message to contact admin
+  if (currentUser && !userProfile) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-8">
+        <Card className="max-w-md mx-auto">
+          <CardHeader>
+            <CardTitle>Account Setup Required</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground mb-4">
+              Your account has been authenticated, but no profile has been set up yet. 
+              Please contact your administrator to complete your account setup.
+            </p>
+            <p className="text-sm text-muted-foreground mb-4">
+              Email: {currentUser.email}
+            </p>
+            <button 
+              onClick={() => {
+                import('@/lib/auth').then(({ logout }) => {
+                  logout().then(() => {
+                    window.location.href = '/login';
+                  });
+                });
+              }}
+              className="w-full px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+            >
+              Sign Out & Try Different Account
+            </button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   const renderContent = () => {
-    if (isAdmin) {
+    if (isAdmin === true) {
       switch (currentView) {
         case 'dashboard':
           return <AdminDashboard />;

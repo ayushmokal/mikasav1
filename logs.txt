@@ -1,0 +1,200 @@
+ocalhost:8083/src/contexts/AuthContext.tsx?t=1754575210783:47) Auth state changed: null
+[LOG] [2025-08-07T14:11:21.943Z]  (http://localhost:8083/src/components/auth/LoginForm.tsx?t=1754575210783:54) Signing in user: user@user.com
+[LOG] [2025-08-07T14:11:21.943Z]  (http://localhost:8083/src/contexts/AuthContext.tsx?t=1754575210783:51) Fetching user profile for UID: F3MtdfELE8gWPPhArQ9uLVexYnu1
+[LOG] [2025-08-07T14:11:21.943Z]  (http://localhost:8083/src/contexts/AuthContext.tsx?t=1754575210783:54) User profile found: null
+[LOG] [2025-08-07T14:11:21.943Z]  (http://localhost:8083/src/contexts/AuthContext.tsx?t=1754575210783:55) User role: undefined
+[LOG] [2025-08-07T14:11:21.943Z]  (http://localhost:8083/src/contexts/AuthContext.tsx?t=1754575210783:59) No user profile found for UID: F3MtdfELE8gWPPhArQ9uLVexYnu1
+[DEBUG] [2025-08-07T14:11:48.231Z]  (http://localhost:8083/@vite/client:495) [vite] connecting...
+[DEBUG] [+057570-04-19T12:43:50.359Z]  [vite] connecting...
+[DEBUG] [2025-08-07T14:11:48.242Z]  (http://localhost:8083/@vite/client:618) [vite] connected.
+[DEBUG] [+057570-04-19T12:44:01.474Z]  [vite] connected.
+[INFO] [2025-08-07T14:11:48.338Z]  (http://localhost:8083/node_modules/.vite/deps/chunk-T2SWDQEL.js?v=85904228:21551) %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold
+[INFO] [+057570-04-19T12:45:37.540Z]  %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold
+[LOG] [2025-08-07T14:11:48.366Z]  (http://localhost:8083/src/contexts/AuthContext.tsx?t=1754575210783:74) User profile role: undefined isAdmin: false
+[LOG] [+057570-04-19T12:46:05.594Z]  User profile role: {"type":"undefined"} isAdmin: {"type":"boolean","value":false}
+[WARNING] [2025-08-07T14:11:48.370Z]  (http://localhost:8083/node_modules/.vite/deps/react-router-dom.js?v=85904228:4393) ⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+[WARNING] [+057570-04-19T12:46:09.478Z]  ⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+[WARNING] [2025-08-07T14:11:48.370Z]  (http://localhost:8083/node_modules/.vite/deps/react-router-dom.js?v=85904228:4393) ⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+[WARNING] [+057570-04-19T12:46:09.611Z]  ⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+[LOG] [2025-08-07T14:11:48.570Z]  (chrome-extension://ejkiikneibegknkgimmihdpcbcedgmpo/content-script.js:22) Document already loaded, running initialization immediately
+[LOG] [+057570-04-19T12:49:29.666Z]  Document already loaded, running initialization immediately
+[LOG] [2025-08-07T14:11:48.571Z]  (chrome-extension://ejkiikneibegknkgimmihdpcbcedgmpo/content-script.js:4) Attempting to initialize AdUnit
+[LOG] [+057570-04-19T12:49:29.810Z]  Attempting to initialize AdUnit
+[LOG] [2025-08-07T14:11:48.571Z]  (chrome-extension://ejkiikneibegknkgimmihdpcbcedgmpo/content-script.js:6) AdUnit initialized successfully
+[LOG] [+057570-04-19T12:49:30.999Z]  AdUnit initialized successfully
+[ERROR] [+057570-04-19T13:00:02.979Z]  Denying load of chrome-extension://iadokddofjgcgjpjlfhngclhpmaelnli/src/assets/styles.css. Resources must be listed in the web_accessible_resources manifest key in order to be loaded by pages outside the extension.
+[ERROR] [+057570-04-19T13:00:16.051Z]  Denying load of chrome-extension://iadokddofjgcgjpjlfhngclhpmaelnli/src/assets/locales/en/translation.json. Resources must be listed in the web_accessible_resources manifest key in order to be loaded by pages outside the extension.
+[ERROR] [+057570-04-19T13:00:37.748Z]  Failed to load resource: net::ERR_FAILED
+[LOG] [2025-08-07T14:11:49.258Z]  (chrome-extension://knekpacpcgkieomkhhngenjeeokddkif/contentScript.js:2) [object NodeList]
+[LOG] [+057570-04-19T13:00:56.338Z]  {}
+[ERROR] [+057570-04-19T13:01:08.425Z]  Failed to load resource: net::ERR_FAILED
+[DEBUG] [+057570-04-19T12:43:50.359Z]  [vite] connecting...
+[DEBUG] [+057570-04-19T12:44:01.474Z]  [vite] connected.
+[INFO] [+057570-04-19T12:45:37.540Z]  %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold
+[LOG] [+057570-04-19T12:46:05.594Z]  User profile role: {"type":"undefined"} isAdmin: {"type":"boolean","value":false}
+[WARNING] [+057570-04-19T12:46:09.478Z]  ⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+[WARNING] [+057570-04-19T12:46:09.611Z]  ⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+[LOG] [+057570-04-19T12:49:29.666Z]  Document already loaded, running initialization immediately
+[LOG] [+057570-04-19T12:49:29.810Z]  Attempting to initialize AdUnit
+[LOG] [+057570-04-19T12:49:30.999Z]  AdUnit initialized successfully
+[LOG] [+057570-04-19T13:00:56.338Z]  NodeList(0)
+[LOG] [+057570-04-19T13:08:10.878Z]  Auth state changed: _UserImpl
+[LOG] [+057570-04-19T13:08:11.160Z]  Fetching user profile for UID: F3MtdfELE8gWPPhArQ9uLVexYnu1
+[LOG] [+057570-04-19T13:08:18.158Z]  User profile role: {"type":"undefined"} isAdmin: {"type":"boolean","value":false}
+[LOG] [+057570-04-19T13:09:18.781Z]  User profile found: Object
+[LOG] [+057570-04-19T13:09:18.859Z]  User role: admin
+[LOG] [+057570-04-19T13:09:19.908Z]  User profile role: admin isAdmin: true
+[ERROR] [+057570-04-19T13:00:02.979Z]  Denying load of chrome-extension://iadokddofjgcgjpjlfhngclhpmaelnli/src/assets/styles.css. Resources must be listed in the web_accessible_resources manifest key in order to be loaded by pages outside the extension.
+[ERROR] [+057570-04-19T13:00:16.051Z]  Denying load of chrome-extension://iadokddofjgcgjpjlfhngclhpmaelnli/src/assets/locales/en/translation.json. Resources must be listed in the web_accessible_resources manifest key in order to be loaded by pages outside the extension.
+[ERROR] [+057570-04-19T13:00:37.748Z]  Failed to load resource: net::ERR_FAILED
+[ERROR] [+057570-04-19T13:01:08.425Z]  Failed to load resource: net::ERR_FAILED
+[ERROR] [+057570-04-19T13:07:07.805Z]  Denying load of chrome-extension://iadokddofjgcgjpjlfhngclhpmaelnli/src/assets/locales/en/translation.json. Resources must be listed in the web_accessible_resources manifest key in order to be loaded by pages outside the extension.
+[ERROR] [+057570-04-19T13:07:12.177Z]  Failed to load resource: net::ERR_FAILED
+[DEBUG] [2025-08-07T14:11:49.798Z]  (http://localhost:8083/@vite/client:495) [vite] connecting...
+[DEBUG] [2025-08-07T14:11:49.798Z]  (http://localhost:8083/@vite/client:618) [vite] connected.
+[INFO] [2025-08-07T14:11:49.798Z]  (http://localhost:8083/node_modules/.vite/deps/chunk-T2SWDQEL.js?v=85904228:21551) %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold
+[LOG] [2025-08-07T14:11:49.798Z]  (http://localhost:8083/src/contexts/AuthContext.tsx?t=1754575210783:74) User profile role: undefined isAdmin: false
+[WARNING] [2025-08-07T14:11:49.798Z]  (http://localhost:8083/node_modules/.vite/deps/react-router-dom.js?v=85904228:4393) ⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+[WARNING] [2025-08-07T14:11:49.798Z]  (http://localhost:8083/node_modules/.vite/deps/react-router-dom.js?v=85904228:4393) ⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+[LOG] [2025-08-07T14:11:49.799Z]  (chrome-extension://ejkiikneibegknkgimmihdpcbcedgmpo/content-script.js:22) Document already loaded, running initialization immediately
+[LOG] [2025-08-07T14:11:49.799Z]  (chrome-extension://ejkiikneibegknkgimmihdpcbcedgmpo/content-script.js:4) Attempting to initialize AdUnit
+[LOG] [2025-08-07T14:11:49.799Z]  (chrome-extension://ejkiikneibegknkgimmihdpcbcedgmpo/content-script.js:6) AdUnit initialized successfully
+[LOG] [2025-08-07T14:11:49.799Z]  (chrome-extension://knekpacpcgkieomkhhngenjeeokddkif/contentScript.js:2) [object NodeList]
+[LOG] [2025-08-07T14:11:49.799Z]  (http://localhost:8083/src/contexts/AuthContext.tsx?t=1754575210783:47) Auth state changed: [object Object]
+[LOG] [2025-08-07T14:11:49.799Z]  (http://localhost:8083/src/contexts/AuthContext.tsx?t=1754575210783:51) Fetching user profile for UID: F3MtdfELE8gWPPhArQ9uLVexYnu1
+[LOG] [2025-08-07T14:11:49.800Z]  (http://localhost:8083/src/contexts/AuthContext.tsx?t=1754575210783:54) User profile found: [object Object]
+[LOG] [2025-08-07T14:11:49.800Z]  (http://localhost:8083/src/contexts/AuthContext.tsx?t=1754575210783:55) User role: admin
+[LOG] [2025-08-07T14:11:49.800Z]  (http://localhost:8083/src/contexts/AuthContext.tsx?t=1754575210783:74) User profile role: admin isAdmin: true
+[ERROR] [+057570-04-19T13:18:52.869Z]  Denying load of chrome-extension://iadokddofjgcgjpjlfhngclhpmaelnli/src/assets/locales/en/translation.json. Resources must be listed in the web_accessible_resources manifest key in order to be loaded by pages outside the extension.
+[ERROR] [+057570-04-19T13:18:54.427Z]  Failed to load resource: net::ERR_FAILED
+[ERROR] [+057570-04-19T13:42:16.887Z]  Denying load of chrome-extension://iadokddofjgcgjpjlfhngclhpmaelnli/src/assets/locales/en/translation.json. Resources must be listed in the web_accessible_resources manifest key in order to be loaded by pages outside the extension.
+[ERROR] [+057570-04-19T13:42:20.918Z]  Failed to load resource: net::ERR_FAILED
+[ERROR] [+057570-04-19T14:29:03.030Z]  Denying load of chrome-extension://iadokddofjgcgjpjlfhngclhpmaelnli/src/assets/locales/en/translation.json. Resources must be listed in the web_accessible_resources manifest key in order to be loaded by pages outside the extension.
+[ERROR] [+057570-04-19T14:29:05.783Z]  Failed to load resource: net::ERR_FAILED
+[ERROR] [+057570-04-19T16:02:27.534Z]  Denying load of chrome-extension://iadokddofjgcgjpjlfhngclhpmaelnli/src/assets/locales/en/translation.json. Resources must be listed in the web_accessible_resources manifest key in order to be loaded by pages outside the extension.
+[ERROR] [+057570-04-19T16:02:29.540Z]  Failed to load resource: net::ERR_FAILED
+[LOG] [2025-08-07T14:12:04.139Z]  (http://localhost:8083/src/contexts/AuthContext.tsx?t=1754575210783:47) Auth state changed: null
+[LOG] [+057570-04-19T17:08:58.665Z]  Auth state changed: {"subtype":"null","type":"object","value":null}
+[LOG] [2025-08-07T14:12:04.146Z]  (http://localhost:8083/src/contexts/AuthContext.tsx?t=1754575210783:74) User profile role: undefined isAdmin: false
+[LOG] [+057570-04-19T17:09:05.543Z]  User profile role: {"type":"undefined"} isAdmin: {"type":"boolean","value":false}
+[DEBUG] [+057570-04-19T12:43:50.359Z]  [vite] connecting...
+[DEBUG] [+057570-04-19T12:44:01.474Z]  [vite] connected.
+[INFO] [+057570-04-19T12:45:37.540Z]  %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold
+[LOG] [+057570-04-19T12:46:05.594Z]  User profile role: {"type":"undefined"} isAdmin: {"type":"boolean","value":false}
+[WARNING] [+057570-04-19T12:46:09.478Z]  ⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+[WARNING] [+057570-04-19T12:46:09.611Z]  ⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+[LOG] [+057570-04-19T12:49:29.666Z]  Document already loaded, running initialization immediately
+[LOG] [+057570-04-19T12:49:29.810Z]  Attempting to initialize AdUnit
+[LOG] [+057570-04-19T12:49:30.999Z]  AdUnit initialized successfully
+[LOG] [+057570-04-19T13:00:56.338Z]  NodeList(0)
+[LOG] [+057570-04-19T13:08:10.878Z]  Auth state changed: _UserImpl
+[LOG] [+057570-04-19T13:08:11.160Z]  Fetching user profile for UID: F3MtdfELE8gWPPhArQ9uLVexYnu1
+[LOG] [+057570-04-19T13:08:18.158Z]  User profile role: {"type":"undefined"} isAdmin: {"type":"boolean","value":false}
+[LOG] [+057570-04-19T13:09:18.781Z]  User profile found: Object
+[LOG] [+057570-04-19T13:09:18.859Z]  User role: admin
+[LOG] [+057570-04-19T13:09:19.908Z]  User profile role: admin isAdmin: true
+[LOG] [+057570-04-19T17:08:58.665Z]  Auth state changed: {"subtype":"null","type":"object","value":null}
+[LOG] [+057570-04-19T17:09:05.543Z]  User profile role: {"type":"undefined"} isAdmin: {"type":"boolean","value":false}
+[ERROR] [+057570-04-19T13:00:02.979Z]  Denying load of chrome-extension://iadokddofjgcgjpjlfhngclhpmaelnli/src/assets/styles.css. Resources must be listed in the web_accessible_resources manifest key in order to be loaded by pages outside the extension.
+[ERROR] [+057570-04-19T13:00:16.051Z]  Denying load of chrome-extension://iadokddofjgcgjpjlfhngclhpmaelnli/src/assets/locales/en/translation.json. Resources must be listed in the web_accessible_resources manifest key in order to be loaded by pages outside the extension.
+[ERROR] [+057570-04-19T13:00:37.748Z]  Failed to load resource: net::ERR_FAILED
+[ERROR] [+057570-04-19T13:01:08.425Z]  Failed to load resource: net::ERR_FAILED
+[ERROR] [+057570-04-19T13:07:07.805Z]  Denying load of chrome-extension://iadokddofjgcgjpjlfhngclhpmaelnli/src/assets/locales/en/translation.json. Resources must be listed in the web_accessible_resources manifest key in order to be loaded by pages outside the extension.
+[ERROR] [+057570-04-19T13:07:12.177Z]  Failed to load resource: net::ERR_FAILED
+[ERROR] [+057570-04-19T13:18:52.869Z]  Denying load of chrome-extension://iadokddofjgcgjpjlfhngclhpmaelnli/src/assets/locales/en/translation.json. Resources must be listed in the web_accessible_resources manifest key in order to be loaded by pages outside the extension.
+[ERROR] [+057570-04-19T13:18:54.427Z]  Failed to load resource: net::ERR_FAILED
+[ERROR] [+057570-04-19T13:42:16.887Z]  Denying load of chrome-extension://iadokddofjgcgjpjlfhngclhpmaelnli/src/assets/locales/en/translation.json. Resources must be listed in the web_accessible_resources manifest key in order to be loaded by pages outside the extension.
+[ERROR] [+057570-04-19T13:42:20.918Z]  Failed to load resource: net::ERR_FAILED
+[ERROR] [+057570-04-19T14:29:03.030Z]  Denying load of chrome-extension://iadokddofjgcgjpjlfhngclhpmaelnli/src/assets/locales/en/translation.json. Resources must be listed in the web_accessible_resources manifest key in order to be loaded by pages outside the extension.
+[ERROR] [+057570-04-19T14:29:05.783Z]  Failed to load resource: net::ERR_FAILED
+[ERROR] [+057570-04-19T16:02:27.534Z]  Denying load of chrome-extension://iadokddofjgcgjpjlfhngclhpmaelnli/src/assets/locales/en/translation.json. Resources must be listed in the web_accessible_resources manifest key in order to be loaded by pages outside the extension.
+[ERROR] [+057570-04-19T16:02:29.540Z]  Failed to load resource: net::ERR_FAILED
+[VERBOSE] [+057570-04-19T17:10:54.064Z]  [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o
+[DEBUG] [2025-08-07T14:12:04.697Z]  (http://localhost:8083/@vite/client:495) [vite] connecting...
+[DEBUG] [2025-08-07T14:12:04.697Z]  (http://localhost:8083/@vite/client:618) [vite] connected.
+[INFO] [2025-08-07T14:12:04.697Z]  (http://localhost:8083/node_modules/.vite/deps/chunk-T2SWDQEL.js?v=85904228:21551) %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold
+[LOG] [2025-08-07T14:12:04.698Z]  (http://localhost:8083/src/contexts/AuthContext.tsx?t=1754575210783:74) User profile role: undefined isAdmin: false
+[WARNING] [2025-08-07T14:12:04.698Z]  (http://localhost:8083/node_modules/.vite/deps/react-router-dom.js?v=85904228:4393) ⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+[WARNING] [2025-08-07T14:12:04.698Z]  (http://localhost:8083/node_modules/.vite/deps/react-router-dom.js?v=85904228:4393) ⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+[LOG] [2025-08-07T14:12:04.698Z]  (chrome-extension://ejkiikneibegknkgimmihdpcbcedgmpo/content-script.js:22) Document already loaded, running initialization immediately
+[LOG] [2025-08-07T14:12:04.698Z]  (chrome-extension://ejkiikneibegknkgimmihdpcbcedgmpo/content-script.js:4) Attempting to initialize AdUnit
+[LOG] [2025-08-07T14:12:04.699Z]  (chrome-extension://ejkiikneibegknkgimmihdpcbcedgmpo/content-script.js:6) AdUnit initialized successfully
+[LOG] [2025-08-07T14:12:04.699Z]  (chrome-extension://knekpacpcgkieomkhhngenjeeokddkif/contentScript.js:2) [object NodeList]
+[LOG] [2025-08-07T14:12:04.699Z]  (http://localhost:8083/src/contexts/AuthContext.tsx?t=1754575210783:47) Auth state changed: [object Object]
+[LOG] [2025-08-07T14:12:04.699Z]  (http://localhost:8083/src/contexts/AuthContext.tsx?t=1754575210783:51) Fetching user profile for UID: F3MtdfELE8gWPPhArQ9uLVexYnu1
+[LOG] [2025-08-07T14:12:04.699Z]  (http://localhost:8083/src/contexts/AuthContext.tsx?t=1754575210783:54) User profile found: [object Object]
+[LOG] [2025-08-07T14:12:04.700Z]  (http://localhost:8083/src/contexts/AuthContext.tsx?t=1754575210783:55) User role: admin
+[LOG] [2025-08-07T14:12:04.700Z]  (http://localhost:8083/src/contexts/AuthContext.tsx?t=1754575210783:74) User profile role: admin isAdmin: true
+[LOG] [2025-08-07T14:12:04.700Z]  (http://localhost:8083/src/contexts/AuthContext.tsx?t=1754575210783:47) Auth state changed: null
+[LOG] [2025-08-07T14:12:06.079Z]  (http://localhost:8083/src/components/auth/LoginForm.tsx?t=1754575210783:54) Signing in user: user@user.com
+[LOG] [+057570-04-19T17:41:17.828Z]  Signing in user: user@user.com
+[LOG] [2025-08-07T14:12:07.491Z]  (http://localhost:8083/src/contexts/AuthContext.tsx?t=1754575210783:47) Auth state changed: [object Object]
+[LOG] [+057570-04-19T18:04:48.865Z]  Auth state changed: {
+  "providerId": "firebase",
+  "proactiveRefresh": "ProactiveRefresh",
+  "reloadUserInfo": "Object",
+  "reloadListener": "null",
+  "uid": "F3MtdfELE8gWPPhArQ9uLVexYnu1"
+}
+[LOG] [2025-08-07T14:12:07.492Z]  (http://localhost:8083/src/contexts/AuthContext.tsx?t=1754575210783:51) Fetching user profile for UID: F3MtdfELE8gWPPhArQ9uLVexYnu1
+[LOG] [+057570-04-19T18:04:49.565Z]  Fetching user profile for UID: F3MtdfELE8gWPPhArQ9uLVexYnu1
+[LOG] [2025-08-07T14:12:07.523Z]  (http://localhost:8083/src/contexts/AuthContext.tsx?t=1754575210783:74) User profile role: undefined isAdmin: false
+[LOG] [+057570-04-19T18:04:55.463Z]  User profile role: {"type":"undefined"} isAdmin: {"type":"boolean","value":false}
+[DEBUG] [+057570-04-19T12:43:50.359Z]  [vite] connecting...
+[DEBUG] [+057570-04-19T12:44:01.474Z]  [vite] connected.
+[INFO] [+057570-04-19T12:45:37.540Z]  %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold
+[LOG] [+057570-04-19T12:46:05.594Z]  User profile role: {"type":"undefined"} isAdmin: {"type":"boolean","value":false}
+[WARNING] [+057570-04-19T12:46:09.478Z]  ⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+[WARNING] [+057570-04-19T12:46:09.611Z]  ⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+[LOG] [+057570-04-19T12:49:29.666Z]  Document already loaded, running initialization immediately
+[LOG] [+057570-04-19T12:49:29.810Z]  Attempting to initialize AdUnit
+[LOG] [+057570-04-19T12:49:30.999Z]  AdUnit initialized successfully
+[LOG] [+057570-04-19T13:00:56.338Z]  NodeList(0)
+[LOG] [+057570-04-19T13:08:10.878Z]  Auth state changed: _UserImpl
+[LOG] [+057570-04-19T13:08:11.160Z]  Fetching user profile for UID: F3MtdfELE8gWPPhArQ9uLVexYnu1
+[LOG] [+057570-04-19T13:08:18.158Z]  User profile role: {"type":"undefined"} isAdmin: {"type":"boolean","value":false}
+[LOG] [+057570-04-19T13:09:18.781Z]  User profile found: Object
+[LOG] [+057570-04-19T13:09:18.859Z]  User role: admin
+[LOG] [+057570-04-19T13:09:19.908Z]  User profile role: admin isAdmin: true
+[LOG] [+057570-04-19T17:08:58.665Z]  Auth state changed: {"subtype":"null","type":"object","value":null}
+[LOG] [+057570-04-19T17:09:05.543Z]  User profile role: {"type":"undefined"} isAdmin: {"type":"boolean","value":false}
+[LOG] [+057570-04-19T17:41:17.828Z]  Signing in user: user@user.com
+[LOG] [+057570-04-19T18:04:48.865Z]  Auth state changed: _UserImpl
+[LOG] [+057570-04-19T18:04:49.565Z]  Fetching user profile for UID: F3MtdfELE8gWPPhArQ9uLVexYnu1
+[LOG] [+057570-04-19T18:04:55.463Z]  User profile role: {"type":"undefined"} isAdmin: {"type":"boolean","value":false}
+[LOG] [+057570-04-19T18:08:41.554Z]  User profile found: Object
+[LOG] [+057570-04-19T18:08:41.648Z]  User role: admin
+[LOG] [+057570-04-19T18:08:43.069Z]  User profile role: admin isAdmin: true
+[ERROR] [+057570-04-19T13:00:02.979Z]  Denying load of chrome-extension://iadokddofjgcgjpjlfhngclhpmaelnli/src/assets/styles.css. Resources must be listed in the web_accessible_resources manifest key in order to be loaded by pages outside the extension.
+[ERROR] [+057570-04-19T13:00:16.051Z]  Denying load of chrome-extension://iadokddofjgcgjpjlfhngclhpmaelnli/src/assets/locales/en/translation.json. Resources must be listed in the web_accessible_resources manifest key in order to be loaded by pages outside the extension.
+[ERROR] [+057570-04-19T13:00:37.748Z]  Failed to load resource: net::ERR_FAILED
+[ERROR] [+057570-04-19T13:01:08.425Z]  Failed to load resource: net::ERR_FAILED
+[ERROR] [+057570-04-19T13:07:07.805Z]  Denying load of chrome-extension://iadokddofjgcgjpjlfhngclhpmaelnli/src/assets/locales/en/translation.json. Resources must be listed in the web_accessible_resources manifest key in order to be loaded by pages outside the extension.
+[ERROR] [+057570-04-19T13:07:12.177Z]  Failed to load resource: net::ERR_FAILED
+[ERROR] [+057570-04-19T13:18:52.869Z]  Denying load of chrome-extension://iadokddofjgcgjpjlfhngclhpmaelnli/src/assets/locales/en/translation.json. Resources must be listed in the web_accessible_resources manifest key in order to be loaded by pages outside the extension.
+[ERROR] [+057570-04-19T13:18:54.427Z]  Failed to load resource: net::ERR_FAILED
+[ERROR] [+057570-04-19T13:42:16.887Z]  Denying load of chrome-extension://iadokddofjgcgjpjlfhngclhpmaelnli/src/assets/locales/en/translation.json. Resources must be listed in the web_accessible_resources manifest key in order to be loaded by pages outside the extension.
+[ERROR] [+057570-04-19T13:42:20.918Z]  Failed to load resource: net::ERR_FAILED
+[ERROR] [+057570-04-19T14:29:03.030Z]  Denying load of chrome-extension://iadokddofjgcgjpjlfhngclhpmaelnli/src/assets/locales/en/translation.json. Resources must be listed in the web_accessible_resources manifest key in order to be loaded by pages outside the extension.
+[ERROR] [+057570-04-19T14:29:05.783Z]  Failed to load resource: net::ERR_FAILED
+[ERROR] [+057570-04-19T16:02:27.534Z]  Denying load of chrome-extension://iadokddofjgcgjpjlfhngclhpmaelnli/src/assets/locales/en/translation.json. Resources must be listed in the web_accessible_resources manifest key in order to be loaded by pages outside the extension.
+[ERROR] [+057570-04-19T16:02:29.540Z]  Failed to load resource: net::ERR_FAILED
+[VERBOSE] [+057570-04-19T17:10:54.064Z]  [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o
+[DEBUG] [2025-08-07T14:12:08.039Z]  (http://localhost:8083/@vite/client:495) [vite] connecting...
+[DEBUG] [2025-08-07T14:12:08.039Z]  (http://localhost:8083/@vite/client:618) [vite] connected.
+[INFO] [2025-08-07T14:12:08.040Z]  (http://localhost:8083/node_modules/.vite/deps/chunk-T2SWDQEL.js?v=85904228:21551) %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold
+[LOG] [2025-08-07T14:12:08.040Z]  (http://localhost:8083/src/contexts/AuthContext.tsx?t=1754575210783:74) User profile role: undefined isAdmin: false
+[WARNING] [2025-08-07T14:12:08.040Z]  (http://localhost:8083/node_modules/.vite/deps/react-router-dom.js?v=85904228:4393) ⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+[WARNING] [2025-08-07T14:12:08.040Z]  (http://localhost:8083/node_modules/.vite/deps/react-router-dom.js?v=85904228:4393) ⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+[LOG] [2025-08-07T14:12:08.040Z]  (chrome-extension://ejkiikneibegknkgimmihdpcbcedgmpo/content-script.js:22) Document already loaded, running initialization immediately
+[LOG] [2025-08-07T14:12:08.040Z]  (chrome-extension://ejkiikneibegknkgimmihdpcbcedgmpo/content-script.js:4) Attempting to initialize AdUnit
+[LOG] [2025-08-07T14:12:08.040Z]  (chrome-extension://ejkiikneibegknkgimmihdpcbcedgmpo/content-script.js:6) AdUnit initialized successfully
+[LOG] [2025-08-07T14:12:08.040Z]  (chrome-extension://knekpacpcgkieomkhhngenjeeokddkif/contentScript.js:2) [object NodeList]
+[LOG] [2025-08-07T14:12:08.040Z]  (http://localhost:8083/src/contexts/AuthContext.tsx?t=1754575210783:47) Auth state changed: [object Object]
+[LOG] [2025-08-07T14:12:08.040Z]  (http://localhost:8083/src/contexts/AuthContext.tsx?t=1754575210783:51) Fetching user profile for UID: F3MtdfELE8gWPPhArQ9uLVexYnu1
+[LOG] [2025-08-07T14:12:08.040Z]  (http://localhost:8083/src/contexts/AuthContext.tsx?t=1754575210783:54) User profile found: [object Object]
+[LOG] [2025-08-07T14:12:08.040Z]  (http://localhost:8083/src/contexts/AuthContext.tsx?t=1754575210783:55) User role: admin
+[LOG] [2025-08-07T14:12:08.041Z]  (http://localhost:8083/src/contexts/AuthContext.tsx?t=1754575210783:74) User profile role: admin isAdmin: true
+[LOG] [2025-08-07T14:12:08.041Z]  (http://localhost:8083/src/contexts/AuthContext.tsx?t=1754575210783:47) Auth state changed: null
+[LOG] [2025-08-07T14:12:08.041Z]  (http://localhost:8083/src/components/auth/LoginForm.tsx?t=1754575210783:54) Signing in user: user@user.com
+[ERROR] [+057570-04-19T20:59:07.574Z]  Uncaught (in promise): Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received

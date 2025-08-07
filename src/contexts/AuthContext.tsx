@@ -47,12 +47,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           console.log('User profile found:', profile); // Debug log
           console.log('User role:', profile?.role); // Debug log for role
           setUserProfile(profile);
-          
-          // If no profile exists, create one
-          if (!profile) {
-            console.log('No user profile found for UID:', user.uid); // Debug log
-            setUserProfile(null);
-          }
         } catch (error) {
           console.error('Error fetching user profile:', error);
           setUserProfile(null);
@@ -67,7 +61,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return unsubscribe;
   }, []);
 
-  const isAdmin = userProfile?.role === 'admin';
+  const isAdmin = userProfile?.role === 'admin' && userProfile !== null;
   console.log('User profile role:', userProfile?.role, 'isAdmin:', isAdmin); // Debug log
 
   const value = {
