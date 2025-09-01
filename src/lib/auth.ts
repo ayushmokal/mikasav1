@@ -54,7 +54,7 @@ export const signIn = async (email: string, password: string): Promise<AuthUser>
     } catch (signInError: any) {
       // If sign in fails, check if it's because the user doesn't exist in Firebase Auth
       if (signInError.code === 'auth/user-not-found' || signInError.code === 'auth/invalid-credential') {
-        console.log('User not found in Firebase Auth, checking if user exists in Firestore...');
+        console.log('Auth account missing/invalid. Checking invited users in Firestore...');
         
         // Check if user exists in Firestore with this email
         const { collection, query, where, getDocs } = await import('firebase/firestore');
@@ -67,32 +67,31 @@ export const signIn = async (email: string, password: string): Promise<AuthUser>
           const userDoc = querySnapshot.docs[0];
           const userData = userDoc.data();
           
-          // Check if password matches (for test users, password equals email)
-          if (password === email || password === userData.accountPassword) {
-            console.log('Creating Firebase Auth account for existing user...');
-            
-            // Create Firebase Auth account
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            const newUser = userCredential.user;
-            
-            // Update the user document with the real UID
-            const { updateDoc, doc } = await import('firebase/firestore');
-            await updateDoc(doc(db, 'users', userDoc.id), {
-              uid: newUser.uid,
-              updatedAt: new Date()
-            });
-            
-            console.log('Firebase Auth account created and user document updated');
-            
-            return {
-              uid: newUser.uid,
-              email: newUser.email!,
-              displayName: newUser.displayName || userData.displayName || undefined,
-              role: userData.role || 'user'
-            };
-          } else {
-            throw new Error('Invalid password');
+          // First-time login: allow user to set a password now.
+          // Create the Firebase Auth account with the provided password (min 6 chars).
+          if (typeof password !== 'string' || password.length < 6) {
+            throw new Error('Please enter a password with at least 6 characters for first-time login.');
           }
+
+          console.log('Creating Firebase Auth account for invited user...');
+          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+          const newUser = userCredential.user;
+
+          // Update the user document with the real UID
+          const { updateDoc, doc } = await import('firebase/firestore');
+          await updateDoc(doc(db, 'users', userDoc.id), {
+            uid: newUser.uid,
+            updatedAt: new Date()
+          });
+
+          console.log('Firebase Auth account created and user document updated');
+
+          return {
+            uid: newUser.uid,
+            email: newUser.email!,
+            displayName: newUser.displayName || userData.displayName || undefined,
+            role: userData.role || 'user'
+          };
         } else {
           throw signInError; // Re-throw original error if user doesn't exist in Firestore
         }

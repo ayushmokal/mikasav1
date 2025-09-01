@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,9 +9,10 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { CalendarIcon, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { useCreateUser } from '@/hooks/useFirestore';
+import { useCreateUser, useSharedAccounts, useAssignAccount, useSubscriptionPlans } from '@/hooks/useFirestore';
 import { FirebaseUser, upsertUserReminder } from '@/lib/firestore';
 import { toast } from 'sonner';
+import { SharedAccount } from '@/lib/types';
 
 interface CreateUserModalProps {
   open: boolean;
@@ -29,6 +30,9 @@ const SUBSCRIPTION_PLANS = [
 
 export const CreateUserModal = ({ open, onOpenChange }: CreateUserModalProps) => {
   const createUserMutation = useCreateUser();
+  const assignAccountMutation = useAssignAccount();
+  const { data: accounts = [], isLoading: accountsLoading } = useSharedAccounts();
+  const { data: plans = [] } = useSubscriptionPlans();
   
   const [formData, setFormData] = useState({
     email: '',
@@ -43,11 +47,46 @@ export const CreateUserModal = ({ open, onOpenChange }: CreateUserModalProps) =>
     reminderDays: 3,
   });
 
+  const [selectedAccountId, setSelectedAccountId] = useState('');
+
+  const availableAccounts: SharedAccount[] = (accounts || []).filter(
+    (a) => a.status === 'active' && a.currentUsers < a.maxUsers
+  );
+
+  const selectedAccount = availableAccounts.find(a => a.id === selectedAccountId);
+
+  // Auto-select first available account when dialog opens and none selected
+  useEffect(() => {
+    if (open && !selectedAccountId && availableAccounts.length > 0) {
+      setSelectedAccountId(availableAccounts[0].id);
+      syncFormFromSelectedAccount(availableAccounts[0]);
+    }
+  }, [open, availableAccounts]);
+
+  const syncFormFromSelectedAccount = (account: SharedAccount | undefined) => {
+    if (!account) return;
+    const plan = plans.find(p => p.id === account.planId);
+    setFormData(prev => ({
+      ...prev,
+      accountEmail: account.email,
+      accountPassword: account.password,
+      // keep using our plan fields; mirror from account
+      planName: account.planName,
+      customPlanName: '',
+      planPrice: plan?.price ?? prev.planPrice,
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.email || !formData.accountEmail || !formData.planName || !formData.dueDate) {
-      toast.error('Please fill in all required fields');
+    // Required: must assign from an existing shared account
+    if (!formData.email || !formData.dueDate) {
+      toast.error('Please provide email and due date');
+      return;
+    }
+    if (!selectedAccountId || !selectedAccount) {
+      toast.error('Please select a shared subscription account to assign');
       return;
     }
 
@@ -64,8 +103,8 @@ export const CreateUserModal = ({ open, onOpenChange }: CreateUserModalProps) =>
         email: formData.email,
         displayName: formData.displayName || formData.email.split('@')[0],
         role: 'user',
-        accountEmail: formData.accountEmail,
-        accountPassword: formData.accountPassword,
+        accountEmail: selectedAccount.email,
+        accountPassword: selectedAccount.password,
         plan: {
           name: planName,
           price: formData.planPrice,
@@ -76,6 +115,19 @@ export const CreateUserModal = ({ open, onOpenChange }: CreateUserModalProps) =>
       };
 
       const userId = await createUserMutation.mutateAsync(userData);
+
+      // Link the selected shared account (updates account counts and user doc)
+      try {
+        await assignAccountMutation.mutateAsync({
+          userId,
+          userEmail: formData.email,
+          accountId: selectedAccount.id,
+          planId: selectedAccount.planId,
+        });
+      } catch (assignErr: any) {
+        console.error('Error assigning account after user creation:', assignErr);
+        toast.error(assignErr?.message || 'Failed to assign selected account');
+      }
       
       // Create reminder if due date is set and reminder days > 0
       if (formData.dueDate && formData.reminderDays > 0) {
@@ -94,9 +146,10 @@ export const CreateUserModal = ({ open, onOpenChange }: CreateUserModalProps) =>
         }
       }
       
-      toast.success(`User created successfully! Login credentials: Email: ${formData.email}, Password: ${formData.email} (Firebase Auth account will be created on first login)`);
+      toast.success(`User created and assigned to ${selectedAccount.email}. They will set a password on first login.`);
       onOpenChange(false);
       resetForm();
+      setSelectedAccountId('');
     } catch (error) {
       console.error('Error creating user:', error);
       toast.error('Failed to create user');
@@ -140,7 +193,7 @@ export const CreateUserModal = ({ open, onOpenChange }: CreateUserModalProps) =>
             <h3 className="text-lg font-semibold">User Information</h3>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
               <p className="text-sm text-blue-800">
-                <strong>Note:</strong> The user will be able to login with their email address. The initial password will be set to their email address. The Firebase Auth account will be automatically created when they first log in.
+                <strong>Note:</strong> The user signs in with their email and sets their password on first login. A Firebase Auth account is created at that time, and they can change the password later from their profile.
               </p>
             </div>
             
@@ -172,6 +225,28 @@ export const CreateUserModal = ({ open, onOpenChange }: CreateUserModalProps) =>
           {/* Account Information */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Subscription Account Details</h3>
+            <div className="space-y-2">
+              <Label htmlFor="accountSelect">Select Shared Account</Label>
+              <Select value={selectedAccountId} onValueChange={(val) => {
+                setSelectedAccountId(val);
+                const acc = availableAccounts.find(a => a.id === val);
+                syncFormFromSelectedAccount(acc);
+              }}>
+                <SelectTrigger>
+                  <SelectValue placeholder={accountsLoading ? 'Loading accounts...' : (availableAccounts.length ? 'Choose an available account' : 'No available accounts — create one first')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableAccounts.length === 0 && (
+                    <SelectItem value="" disabled>No available accounts</SelectItem>
+                  )}
+                  {availableAccounts.map((acc) => (
+                    <SelectItem key={acc.id} value={acc.id}>
+                      {acc.planName} — {acc.email} ({acc.currentUsers}/{acc.maxUsers})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -182,7 +257,8 @@ export const CreateUserModal = ({ open, onOpenChange }: CreateUserModalProps) =>
                   value={formData.accountEmail}
                   onChange={(e) => setFormData(prev => ({ ...prev, accountEmail: e.target.value }))}
                   placeholder="netflix.account@example.com"
-                  required
+                  required={false}
+                  disabled={true}
                 />
               </div>
               
@@ -194,6 +270,7 @@ export const CreateUserModal = ({ open, onOpenChange }: CreateUserModalProps) =>
                   value={formData.accountPassword}
                   onChange={(e) => setFormData(prev => ({ ...prev, accountPassword: e.target.value }))}
                   placeholder="Account password"
+                  disabled={true}
                 />
               </div>
             </div>
@@ -202,36 +279,18 @@ export const CreateUserModal = ({ open, onOpenChange }: CreateUserModalProps) =>
           {/* Subscription Plan */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Subscription Plan</h3>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="planName">Service *</Label>
-                <Select value={formData.planName} onValueChange={handlePlanChange}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select service" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SUBSCRIPTION_PLANS.map((plan) => (
-                      <SelectItem key={plan.name} value={plan.name}>
-                        {plan.name} {plan.price > 0 && `(₹${plan.price}/mo)`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              {formData.planName === 'Custom' && (
+            {
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="customPlanName">Custom Service Name *</Label>
-                  <Input
-                    id="customPlanName"
-                    value={formData.customPlanName}
-                    onChange={(e) => setFormData(prev => ({ ...prev, customPlanName: e.target.value }))}
-                    placeholder="Enter service name"
-                  />
+                  <Label>Service</Label>
+                  <Input value={selectedAccount?.planName || ''} readOnly />
                 </div>
-              )}
-            </div>
+                <div className="space-y-2">
+                  <Label>Linked Account</Label>
+                  <Input value={selectedAccount?.email || ''} readOnly />
+                </div>
+              </div>
+            }
             
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
@@ -242,6 +301,7 @@ export const CreateUserModal = ({ open, onOpenChange }: CreateUserModalProps) =>
                   value={formData.planPrice}
                   onChange={(e) => setFormData(prev => ({ ...prev, planPrice: Number(e.target.value) }))}
                   placeholder="200"
+                  disabled={true}
                 />
               </div>
               

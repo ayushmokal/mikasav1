@@ -160,13 +160,19 @@ export const getUserById = async (id: string): Promise<FirebaseUser | null> => {
 // Get all users (admin only)
 export const getAllUsers = async (): Promise<FirebaseUser[]> => {
   try {
+    // Fetch all users ordered by creation time, then filter out admins on the client.
+    // This avoids requiring composite Firestore indexes while ensuring the admin
+    // account never shows up in "managed users" lists.
     const q = query(collection(db, 'users'), orderBy('createdAt', 'desc'));
     const querySnapshot = await getDocs(q);
     
-    return querySnapshot.docs.map(doc => ({
+    const all = querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     })) as FirebaseUser[];
+    
+    // Only return real end-users (exclude admin accounts)
+    return all.filter(u => u.role !== 'admin');
   } catch (error) {
     console.error('Error getting all users:', error);
     throw error;
@@ -215,6 +221,7 @@ export const updateUserPlan = async (id: string, plan: FirebaseUser['plan']): Pr
 // Get users by plan status
 export const getUsersByPlanStatus = async (status: 'active' | 'expired' | 'pending'): Promise<FirebaseUser[]> => {
   try {
+    // Keep query simple to avoid composite index requirements, then filter admins out.
     const q = query(
       collection(db, 'users'), 
       where('plan.status', '==', status),
@@ -222,10 +229,12 @@ export const getUsersByPlanStatus = async (status: 'active' | 'expired' | 'pendi
     );
     const querySnapshot = await getDocs(q);
     
-    return querySnapshot.docs.map(doc => ({
+    const users = querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     })) as FirebaseUser[];
+    
+    return users.filter(u => u.role !== 'admin');
   } catch (error) {
     console.error('Error getting users by plan status:', error);
     throw error;
@@ -553,6 +562,17 @@ export const assignAccountToUser = async (userId: string, userEmail: string, acc
       throw new Error('Account is at maximum capacity');
     }
     
+    // Validate target user is not an admin
+    const userRef = doc(db, 'users', userId);
+    const userSnap = await getDoc(userRef);
+    if (!userSnap.exists()) {
+      throw new Error('User not found');
+    }
+    const targetUser = userSnap.data() as FirebaseUser;
+    if (targetUser.role === 'admin') {
+      throw new Error('Cannot assign accounts to admin users');
+    }
+
     // Create assignment
     const assignmentDoc = {
       userId,
@@ -573,7 +593,6 @@ export const assignAccountToUser = async (userId: string, userEmail: string, acc
     });
     
     // Update user with account details
-    const userRef = doc(db, 'users', userId);
     await updateDoc(userRef, {
       accountEmail: account.email,
       accountPassword: account.password,

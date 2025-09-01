@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Loader2, Plus, X } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useCreateSubscriptionPlan } from '@/hooks/useFirestore';
 import { toast } from 'sonner';
 
@@ -22,7 +22,6 @@ export const CreatePlanModal = ({ open, onOpenChange }: CreatePlanModalProps) =>
     price: 0,
     currency: 'INR',
     description: '',
-    features: [''],
     isActive: true,
   });
 
@@ -37,7 +36,6 @@ export const CreatePlanModal = ({ open, onOpenChange }: CreatePlanModalProps) =>
     try {
       const planData = {
         ...formData,
-        features: formData.features.filter(feature => feature.trim() !== ''),
       };
       
       await createPlanMutation.mutateAsync(planData);
@@ -56,30 +54,8 @@ export const CreatePlanModal = ({ open, onOpenChange }: CreatePlanModalProps) =>
       price: 0,
       currency: 'INR',
       description: '',
-      features: [''],
       isActive: true,
     });
-  };
-
-  const addFeature = () => {
-    setFormData(prev => ({
-      ...prev,
-      features: [...prev.features, ''],
-    }));
-  };
-
-  const removeFeature = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      features: prev.features.filter((_, i) => i !== index),
-    }));
-  };
-
-  const updateFeature = (index: number, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      features: prev.features.map((feature, i) => i === index ? value : feature),
-    }));
   };
 
   return (
@@ -137,38 +113,6 @@ export const CreatePlanModal = ({ open, onOpenChange }: CreatePlanModalProps) =>
                 placeholder="Brief description of the plan"
                 rows={3}
               />
-            </div>
-            
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <Label>Features</Label>
-                <Button type="button" size="sm" onClick={addFeature}>
-                  <Plus className="h-3 w-3 mr-1" />
-                  Add Feature
-                </Button>
-              </div>
-              
-              <div className="space-y-2">
-                {formData.features.map((feature, index) => (
-                  <div key={index} className="flex gap-2">
-                    <Input
-                      value={feature}
-                      onChange={(e) => updateFeature(index, e.target.value)}
-                      placeholder={`Feature ${index + 1}`}
-                    />
-                    {formData.features.length > 1 && (
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        onClick={() => removeFeature(index)}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    )}
-                  </div>
-                ))}
-              </div>
             </div>
             
             <div className="flex items-center space-x-2">

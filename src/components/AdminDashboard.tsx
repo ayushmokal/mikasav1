@@ -175,7 +175,7 @@ export const AdminDashboard = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {users.map((user) => {
+                    {(users || []).filter(user => user.role !== 'admin').map((user) => {
                       const daysUntilDue = getDaysUntilDue(user.plan.dueDate);
                       const isNearDue = daysUntilDue <= 7 && daysUntilDue >= 0;
                       const isOverdue = daysUntilDue < 0;
