@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { LayoutDashboard, Users, Settings, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { logout } from "@/lib/auth";
+import { Logo } from "@/components/ui/logo";
 
 interface NavigationProps {
   currentView: string;
@@ -33,12 +34,10 @@ export const Navigation = ({ currentView, onViewChange }: NavigationProps) => {
   const navItems = isAdmin ? adminNavItems : userNavItems;
 
   return (
-    <Card className="w-64 h-screen bg-gradient-card shadow-elevated border-0 rounded-none">
+    <Card className="w-64 h-screen bg-netflix-card shadow-elevated border-netflix-border rounded-none">
       <div className="p-6">
         <div className="mb-8">
-          <h2 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-            SubVault
-          </h2>
+          <Logo size="sm" glow={true} className="mb-2" />
           <p className="text-sm text-muted-foreground">
             {isAdmin ? 'Admin Panel' : 'User Portal'}
           </p>

@@ -24,7 +24,7 @@ const Index = () => {
   // Only show debug panel during loading, not for missing profiles
   if (loading) {
     return (
-      <div className="min-h-screen bg-background p-8">
+      <div className="min-h-screen bg-netflix-bg p-8">
         <DebugPanel />
       </div>
     );
@@ -33,12 +33,12 @@ const Index = () => {
   // If user is authenticated but has no profile, show a message to contact admin
   if (currentUser && !userProfile) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-8">
-        <Card className="max-w-md mx-auto">
+      <div className="min-h-screen bg-netflix-bg flex items-center justify-center p-8">
+        <Card className="max-w-md mx-auto bg-netflix-card shadow-elevated border-netflix-border netflix-scale-in">
           <CardHeader>
-            <CardTitle>Account Setup Required</CardTitle>
+            <CardTitle className="netflix-text netflix-fade-in">Account Setup Required</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="netflix-slide-up">
             <p className="text-muted-foreground mb-4">
               Your account has been authenticated, but no profile has been set up yet. 
               Please contact your administrator to complete your account setup.
@@ -54,7 +54,7 @@ const Index = () => {
                   });
                 });
               }}
-              className="w-full px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+              className="w-full px-4 py-2 netflix-button text-primary-foreground rounded-md transition-all duration-300"
             >
               Sign Out & Try Different Account
             </button>
@@ -73,9 +73,9 @@ const Index = () => {
           return <AdminDashboard />;
         case 'settings':
           return (
-            <Card className="bg-gradient-card shadow-card border-0">
+            <Card className="bg-netflix-card shadow-elevated border-netflix-border">
               <CardHeader>
-                <CardTitle>Admin Settings</CardTitle>
+                <CardTitle className="netflix-text">Admin Settings</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">Admin settings panel would go here.</p>
@@ -91,9 +91,9 @@ const Index = () => {
           return <UserDashboard />;
         case 'settings':
           return (
-            <Card className="bg-gradient-card shadow-card border-0">
+            <Card className="bg-netflix-card shadow-elevated border-netflix-border">
               <CardHeader>
-                <CardTitle>User Settings</CardTitle>
+                <CardTitle className="netflix-text">User Settings</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">User settings panel would go here.</p>
@@ -107,7 +107,7 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-netflix-bg flex">
       <Navigation 
         currentView={currentView} 
         onViewChange={setCurrentView} 

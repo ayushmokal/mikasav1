@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { useAuth } from '@/contexts/AuthContext';
+import { Logo } from '@/components/ui/logo';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -15,9 +16,10 @@ const Login = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-netflix-bg flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+          <Logo size="lg" glow={true} className="mb-4" />
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
           <p className="mt-4 text-muted-foreground">Loading...</p>
         </div>
       </div>
@@ -25,13 +27,11 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-netflix-bg flex items-center justify-center p-4">
+      <div className="w-full max-w-md netflix-scale-in">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-            SubVault
-          </h1>
-          <p className="text-muted-foreground mt-2">
+          <Logo size="lg" glow={true} className="mb-4 netflix-fade-in" />
+          <p className="text-muted-foreground mt-2 netflix-slide-up">
             Sign in to manage your subscriptions
           </p>
         </div>
