@@ -38,8 +38,45 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
 
     try {
       if (isLogin) {
-        console.log('Signing in user:', formData.email);
-        await signIn(formData.email, formData.password);
+        // Support a simple dev admin alias: email "admin" with password "admin"
+        // Maps to a valid Firebase Auth account behind the scenes.
+        let email = formData.email.trim();
+        let password = formData.password;
+
+        if (email === 'admin') {
+          const aliasEmail = 'admin@local.dev';
+          const aliasPassword = password === 'admin' ? 'adminadmin' : (password.length < 6 ? 'adminadmin' : password);
+
+          // Ensure an admin profile exists in Firestore for aliasEmail
+          try {
+            const { collection, query, where, getDocs, addDoc, Timestamp } = await import('firebase/firestore');
+            const { db } = await import('@/lib/firebase');
+            const q = query(collection(db, 'users'), where('email', '==', aliasEmail));
+            const snap = await getDocs(q);
+            if (snap.empty) {
+              await addDoc(collection(db, 'users'), {
+                uid: `temp_admin_${Date.now()}`,
+                email: aliasEmail,
+                displayName: 'Admin',
+                role: 'admin',
+                accountEmail: '',
+                accountPassword: '',
+                plan: { name: 'Admin', price: 0, dueDate: '2099-12-31', status: 'active' },
+                joinDate: new Date().toISOString().split('T')[0],
+                createdAt: Timestamp.now(),
+                updatedAt: Timestamp.now(),
+              });
+            }
+          } catch (seedErr) {
+            console.warn('Admin seed step skipped:', seedErr);
+          }
+
+          email = aliasEmail;
+          password = aliasPassword;
+        }
+
+        console.log('Signing in user:', email);
+        await signIn(email, password);
       } else {
         console.log('Signing up user:', formData.email);
         // Sign up
@@ -83,7 +120,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
         <CardTitle>{isLogin ? 'Sign In' : 'Sign Up'}</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} noValidate className="space-y-4">
           {error && (
             <Alert variant="destructive">
               <AlertDescription>{error}</AlertDescription>

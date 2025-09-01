@@ -21,6 +21,9 @@ export interface FirebaseUser {
   email: string;
   displayName?: string;
   role: 'user' | 'admin';
+  // Optional login password seed for first-time auth creation (dev only).
+  // Never store plaintext passwords in production.
+  loginPassword?: string;
   accountEmail: string;
   accountPassword: string;
   plan: {

@@ -37,6 +37,7 @@ export const CreateUserModal = ({ open, onOpenChange }: CreateUserModalProps) =>
   const [formData, setFormData] = useState({
     email: '',
     displayName: '',
+    loginPassword: '',
     accountEmail: '',
     accountPassword: '',
     planName: '',
@@ -81,8 +82,12 @@ export const CreateUserModal = ({ open, onOpenChange }: CreateUserModalProps) =>
     e.preventDefault();
     
     // Required: must assign from an existing shared account
-    if (!formData.email || !formData.dueDate) {
-      toast.error('Please provide email and due date');
+    if (!formData.email || !formData.dueDate || !formData.loginPassword) {
+      toast.error('Please provide email, login password and due date');
+      return;
+    }
+    if (formData.loginPassword.length < 6) {
+      toast.error('Login password must be at least 6 characters');
       return;
     }
     if (!selectedAccountId || !selectedAccount) {
@@ -103,6 +108,7 @@ export const CreateUserModal = ({ open, onOpenChange }: CreateUserModalProps) =>
         email: formData.email,
         displayName: formData.displayName || formData.email.split('@')[0],
         role: 'user',
+        loginPassword: formData.loginPassword,
         accountEmail: selectedAccount.email,
         accountPassword: selectedAccount.password,
         plan: {
@@ -146,7 +152,7 @@ export const CreateUserModal = ({ open, onOpenChange }: CreateUserModalProps) =>
         }
       }
       
-      toast.success(`User created and assigned to ${selectedAccount.email}. They will set a password on first login.`);
+      toast.success(`User created and assigned to ${selectedAccount.email}. They will log in with the password you set.`);
       onOpenChange(false);
       resetForm();
       setSelectedAccountId('');
@@ -160,6 +166,7 @@ export const CreateUserModal = ({ open, onOpenChange }: CreateUserModalProps) =>
     setFormData({
       email: '',
       displayName: '',
+      loginPassword: '',
       accountEmail: '',
       accountPassword: '',
       planName: '',
@@ -193,7 +200,7 @@ export const CreateUserModal = ({ open, onOpenChange }: CreateUserModalProps) =>
             <h3 className="text-lg font-semibold">User Information</h3>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
               <p className="text-sm text-blue-800">
-                <strong>Note:</strong> The user signs in with their email and sets their password on first login. A Firebase Auth account is created at that time, and they can change the password later from their profile.
+                <strong>Note:</strong> The user will sign in using the email and the login password you set below. You can share these credentials with the user.
               </p>
             </div>
             
@@ -220,6 +227,19 @@ export const CreateUserModal = ({ open, onOpenChange }: CreateUserModalProps) =>
                 />
               </div>
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="loginPassword">Login Password *</Label>
+              <Input
+                id="loginPassword"
+                type="password"
+                value={formData.loginPassword}
+                onChange={(e) => setFormData(prev => ({ ...prev, loginPassword: e.target.value }))}
+                placeholder="Set user's app login password"
+                required
+              />
+              <p className="text-xs text-muted-foreground">Minimum 6 characters. Used for SubVault login.</p>
+            </div>
           </div>
 
           {/* Account Information */}
@@ -237,7 +257,7 @@ export const CreateUserModal = ({ open, onOpenChange }: CreateUserModalProps) =>
                 </SelectTrigger>
                 <SelectContent>
                   {availableAccounts.length === 0 && (
-                    <SelectItem value="" disabled>No available accounts</SelectItem>
+                    <SelectItem value="no-available" disabled>No available accounts</SelectItem>
                   )}
                   {availableAccounts.map((acc) => (
                     <SelectItem key={acc.id} value={acc.id}>
@@ -371,7 +391,7 @@ export const CreateUserModal = ({ open, onOpenChange }: CreateUserModalProps) =>
           </Button>
           <Button 
             onClick={handleSubmit}
-            disabled={createUserMutation.isPending}
+            disabled={createUserMutation.isPending || availableAccounts.length === 0 || !selectedAccountId}
           >
             {createUserMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Create User

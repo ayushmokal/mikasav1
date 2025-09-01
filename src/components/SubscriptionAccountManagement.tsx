@@ -88,6 +88,19 @@ export const SubscriptionAccountManagement = () => {
 
   return (
     <div className="space-y-6">
+      {accounts.length === 0 && (
+        <div className="rounded-md border border-yellow-300 bg-yellow-50 text-yellow-900 p-3">
+          <div className="flex items-center justify-between">
+            <p className="text-sm">
+              No shared accounts found. Create an account before assigning users.
+            </p>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={() => setCreatePlanOpen(true)}>Create Plan</Button>
+              <Button size="sm" onClick={() => setCreateAccountOpen(true)}>Create Account</Button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold">Subscription Account Management</h2>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { UserDashboard } from '@/components/UserDashboard';
 import { AdminDashboard } from '@/components/AdminDashboard';
@@ -9,6 +9,17 @@ import { useAuth } from '@/contexts/AuthContext';
 const Index = () => {
   const { isAdmin, loading, currentUser, userProfile } = useAuth();
   const [currentView, setCurrentView] = useState('dashboard');
+
+  // Run a one-time migration to ensure users/{uid} docs exist when an admin visits
+  const migratedRef = useRef(false)
+  useEffect(() => {
+    if (!migratedRef.current && isAdmin) {
+      migratedRef.current = true
+      import('@/lib/migrations')
+        .then(({ migrateUsersToUidDocs }) => migrateUsersToUidDocs())
+        .catch((e) => console.warn('User migration skipped:', e))
+    }
+  }, [isAdmin])
 
   // Only show debug panel during loading, not for missing profiles
   if (loading) {
