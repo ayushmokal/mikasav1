@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Loader2 } from 'lucide-react';
+import { CalendarIcon, Loader2, Eye, EyeOff } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useCreateUser, useSharedAccounts, useAssignAccount, useSubscriptionPlans } from '@/hooks/useFirestore';
@@ -33,6 +33,8 @@ export const CreateUserModal = ({ open, onOpenChange }: CreateUserModalProps) =>
   const assignAccountMutation = useAssignAccount();
   const { data: accounts = [], isLoading: accountsLoading } = useSharedAccounts();
   const { data: plans = [] } = useSubscriptionPlans();
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showAccountPassword, setShowAccountPassword] = useState(false);
   
   const [formData, setFormData] = useState({
     email: '',
@@ -230,14 +232,30 @@ export const CreateUserModal = ({ open, onOpenChange }: CreateUserModalProps) =>
 
             <div className="space-y-2">
               <Label htmlFor="loginPassword">Login Password *</Label>
-              <Input
-                id="loginPassword"
-                type="password"
-                value={formData.loginPassword}
-                onChange={(e) => setFormData(prev => ({ ...prev, loginPassword: e.target.value }))}
-                placeholder="Set user's app login password"
-                required
-              />
+              <div className="relative">
+                <Input
+                  id="loginPassword"
+                  type={showLoginPassword ? "text" : "password"}
+                  value={formData.loginPassword}
+                  onChange={(e) => setFormData(prev => ({ ...prev, loginPassword: e.target.value }))}
+                  placeholder="Set user's app login password"
+                  className="pr-10"
+                  required
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowLoginPassword(!showLoginPassword)}
+                >
+                  {showLoginPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
               <p className="text-xs text-muted-foreground">Minimum 6 characters. Used for SubVault login.</p>
             </div>
           </div>
@@ -284,14 +302,31 @@ export const CreateUserModal = ({ open, onOpenChange }: CreateUserModalProps) =>
               
               <div className="space-y-2">
                 <Label htmlFor="accountPassword">Account Password</Label>
-                <Input
-                  id="accountPassword"
-                  type="password"
-                  value={formData.accountPassword}
-                  onChange={(e) => setFormData(prev => ({ ...prev, accountPassword: e.target.value }))}
-                  placeholder="Account password"
-                  disabled={true}
-                />
+                <div className="relative">
+                  <Input
+                    id="accountPassword"
+                    type={showAccountPassword ? "text" : "password"}
+                    value={formData.accountPassword}
+                    onChange={(e) => setFormData(prev => ({ ...prev, accountPassword: e.target.value }))}
+                    placeholder="Account password"
+                    className="pr-10"
+                    disabled={true}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    onClick={() => setShowAccountPassword(!showAccountPassword)}
+                    disabled={!formData.accountPassword}
+                  >
+                    {showAccountPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
