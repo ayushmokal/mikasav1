@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User } from 'firebase/auth';
 import { onAuthStateChange } from '@/lib/auth';
 import { getUserByUid, FirebaseUser } from '@/lib/firestore';
+import { createProfileForAuthUser } from '@/lib/userRecovery';
 
 interface AuthContextType {
   currentUser: User | null;
@@ -36,22 +37,57 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChange(async (user) => {
-      console.log('Auth state changed:', user); // Debug log
+      console.log('[AUTH] State changed:', {
+        hasUser: !!user,
+        uid: user?.uid,
+        email: user?.email,
+        timestamp: new Date().toISOString()
+      });
       setCurrentUser(user);
       
       if (user) {
         try {
-          console.log('Fetching user profile for UID:', user.uid); // Debug log
+          console.log('[AUTH] Fetching user profile for UID:', user.uid);
+          const startTime = Date.now();
+          
           // Fetch user profile from Firestore
-          const profile = await getUserByUid(user.uid);
-          console.log('User profile found:', profile); // Debug log
-          console.log('User role:', profile?.role); // Debug log for role
+          let profile = await getUserByUid(user.uid);
+          
+          // If no profile exists, create one for this authenticated user
+          let wasCreated = false;
+          if (!profile) {
+            console.log('[AUTH] No profile found, creating profile for authenticated user');
+            profile = await createProfileForAuthUser({
+              uid: user.uid,
+              email: user.email!,
+              displayName: user.displayName
+            });
+            wasCreated = true;
+          }
+          
+          const fetchTime = Date.now() - startTime;
+          console.log('[AUTH] User profile fetch completed:', {
+            success: !!profile,
+            role: profile?.role,
+            email: profile?.email,
+            fetchTimeMs: fetchTime,
+            profileId: profile?.id,
+            wasCreated
+          });
+          
           setUserProfile(profile);
         } catch (error) {
-          console.error('Error fetching user profile:', error);
+          console.error('[AUTH] Error fetching/creating user profile:', {
+            error: error instanceof Error ? error.message : 'Unknown error',
+            errorStack: error instanceof Error ? error.stack : undefined,
+            uid: user.uid,
+            email: user.email,
+            timestamp: new Date().toISOString()
+          });
           setUserProfile(null);
         }
       } else {
+        console.log('[AUTH] No user, clearing profile');
         setUserProfile(null);
       }
       
@@ -62,7 +98,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   const isAdmin = userProfile?.role === 'admin' && userProfile !== null;
-  console.log('User profile role:', userProfile?.role, 'isAdmin:', isAdmin); // Debug log
+  
+  // Enhanced debug logging for admin status
+  console.log('[AUTH] Admin check:', {
+    hasProfile: !!userProfile,
+    role: userProfile?.role,
+    isAdmin,
+    userId: userProfile?.id,
+    timestamp: new Date().toISOString()
+  });
 
   const value = {
     currentUser,

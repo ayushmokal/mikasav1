@@ -36,6 +36,13 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
     setError('');
     setLoading(true);
 
+    const submitStartTime = Date.now();
+    console.log('[LOGIN] Form submission started:', {
+      email: formData.email,
+      isLogin,
+      timestamp: new Date().toISOString()
+    });
+
     try {
       if (isLogin) {
         // Support a simple dev admin alias: email "admin" with password "admin"
@@ -47,6 +54,11 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
           const aliasEmail = 'admin@local.dev';
           const aliasPassword = password === 'admin' ? 'adminadmin' : (password.length < 6 ? 'adminadmin' : password);
 
+          console.log('[LOGIN] Admin alias detected, mapping to:', {
+            original: { email, password: '***' },
+            mapped: { email: aliasEmail, password: '***' }
+          });
+
           // Ensure an admin profile exists in Firestore for aliasEmail
           try {
             const { collection, query, where, getDocs, addDoc, Timestamp } = await import('firebase/firestore');
@@ -54,6 +66,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
             const q = query(collection(db, 'users'), where('email', '==', aliasEmail));
             const snap = await getDocs(q);
             if (snap.empty) {
+              console.log('[LOGIN] Creating admin profile in Firestore');
               await addDoc(collection(db, 'users'), {
                 uid: `temp_admin_${Date.now()}`,
                 email: aliasEmail,
@@ -68,20 +81,33 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
               });
             }
           } catch (seedErr) {
-            console.warn('Admin seed step skipped:', seedErr);
+            console.warn('[LOGIN] Admin seed step skipped:', seedErr);
           }
 
           email = aliasEmail;
           password = aliasPassword;
         }
 
-        console.log('Signing in user:', email);
+        console.log('[LOGIN] Attempting sign in for:', email);
+        const signInStartTime = Date.now();
+        
         await signIn(email, password);
+        
+        const signInTime = Date.now() - signInStartTime;
+        console.log('[LOGIN] Sign in successful:', {
+          email,
+          signInTimeMs: signInTime,
+          totalTimeMs: Date.now() - submitStartTime
+        });
       } else {
-        console.log('Signing up user:', formData.email);
+        console.log('[LOGIN] Attempting sign up for:', formData.email);
         // Sign up
         const authUser = await signUp(formData.email, formData.password, formData.displayName);
-        console.log('Auth user created:', authUser);
+        console.log('[LOGIN] Auth user created:', {
+          uid: authUser.uid,
+          email: authUser.email,
+          displayName: authUser.displayName
+        });
         
         // Create user document in Firestore
         const userData = {
@@ -100,14 +126,24 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
           joinDate: new Date().toISOString().split('T')[0],
         };
         
-        console.log('Creating user document:', userData);
+        console.log('[LOGIN] Creating user document in Firestore');
         const docId = await createUser(userData);
-        console.log('User document created with ID:', docId);
+        console.log('[LOGIN] User document created with ID:', docId);
       }
       
+      console.log('[LOGIN] Authentication process completed successfully');
       onSuccess?.();
     } catch (err: any) {
-      console.error('Auth error:', err);
+      const errorDetails = {
+        message: err.message || 'Unknown error',
+        code: err.code,
+        email: formData.email,
+        isLogin,
+        timestamp: new Date().toISOString(),
+        totalTimeMs: Date.now() - submitStartTime
+      };
+      
+      console.error('[LOGIN] Authentication failed:', errorDetails);
       setError(err.message || 'An error occurred');
     } finally {
       setLoading(false);

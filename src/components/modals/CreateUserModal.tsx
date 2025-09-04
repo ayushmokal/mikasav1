@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,7 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { CalendarIcon, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { useCreateUser, useSharedAccounts, useAssignAccount, useSubscriptionPlans } from '@/hooks/useFirestore';
+import { useCreateUserWithAuth, useSharedAccounts, useAssignAccount, useSubscriptionPlans } from '@/hooks/useFirestore';
 import { FirebaseUser, upsertUserReminder } from '@/lib/firestore';
 import { toast } from 'sonner';
 import { SharedAccount } from '@/lib/types';
@@ -29,7 +29,7 @@ const SUBSCRIPTION_PLANS = [
 ];
 
 export const CreateUserModal = ({ open, onOpenChange }: CreateUserModalProps) => {
-  const createUserMutation = useCreateUser();
+  const createUserMutation = useCreateUserWithAuth();
   const assignAccountMutation = useAssignAccount();
   const { data: accounts = [], isLoading: accountsLoading } = useSharedAccounts();
   const { data: plans = [] } = useSubscriptionPlans();
@@ -103,8 +103,7 @@ export const CreateUserModal = ({ open, onOpenChange }: CreateUserModalProps) =>
     }
 
     try {
-      const userData: Omit<FirebaseUser, 'id' | 'createdAt' | 'updatedAt'> = {
-        uid: `temp_${Date.now()}`, // Temporary UID, will be updated when user first logs in
+      const userData: Omit<FirebaseUser, 'id' | 'createdAt' | 'updatedAt' | 'uid'> = {
         email: formData.email,
         displayName: formData.displayName || formData.email.split('@')[0],
         role: 'user',
@@ -120,7 +119,12 @@ export const CreateUserModal = ({ open, onOpenChange }: CreateUserModalProps) =>
         joinDate: format(new Date(), 'yyyy-MM-dd'),
       };
 
-      const userId = await createUserMutation.mutateAsync(userData);
+      const result = await createUserMutation.mutateAsync({
+        userData,
+        password: formData.loginPassword
+      });
+      
+      const userId = result.userId;
 
       // Link the selected shared account (updates account counts and user doc)
       try {
@@ -141,6 +145,7 @@ export const CreateUserModal = ({ open, onOpenChange }: CreateUserModalProps) =>
           const fullUserData: FirebaseUser = {
             ...userData,
             id: userId,
+            uid: result.authUid, // Use the real Firebase Auth UID
             createdAt: null as any, // These will be set by the system
             updatedAt: null as any,
           };
@@ -192,6 +197,9 @@ export const CreateUserModal = ({ open, onOpenChange }: CreateUserModalProps) =>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New User</DialogTitle>
+          <DialogDescription>
+            Add a new user to the system by providing their information and assigning them to a shared subscription account.
+          </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -200,7 +208,7 @@ export const CreateUserModal = ({ open, onOpenChange }: CreateUserModalProps) =>
             <h3 className="text-lg font-semibold">User Information</h3>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
               <p className="text-sm text-blue-800">
-                <strong>Note:</strong> The user will sign in using the email and the login password you set below. You can share these credentials with the user.
+                <strong>Admin Note:</strong> You are setting the user's login password. They will use this email and password to sign into SubVault. You can change their password anytime from the user management panel.
               </p>
             </div>
             
@@ -238,7 +246,7 @@ export const CreateUserModal = ({ open, onOpenChange }: CreateUserModalProps) =>
                 placeholder="Set user's app login password"
                 required
               />
-              <p className="text-xs text-muted-foreground">Minimum 6 characters. Used for SubVault login.</p>
+              <p className="text-xs text-muted-foreground">Minimum 6 characters. User will sign into SubVault with this password. You can reset it anytime.</p>
             </div>
           </div>
 

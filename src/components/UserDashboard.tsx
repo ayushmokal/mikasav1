@@ -4,13 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CreditCard, User, Calendar, DollarSign, Eye, EyeOff, Loader2, Settings, Shield } from "lucide-react";
+import { CreditCard, User, Calendar, DollarSign, Eye, EyeOff, Loader2, Settings, Shield, Mail } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { updatePassword } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { toast } from "sonner";
 import { format, parseISO, differenceInDays } from "date-fns";
+import { InboxManagement } from "@/components/InboxManagement";
 
 export const UserDashboard = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -267,6 +268,9 @@ export const UserDashboard = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Email Inbox Section */}
+      <InboxManagement />
 
       {/* Quick Actions */}
       <div className="flex gap-4">

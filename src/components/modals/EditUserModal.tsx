@@ -9,7 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { CalendarIcon, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { useUpdateUser } from '@/hooks/useFirestore';
+import { useUpdateUser, useResetUserPassword } from '@/hooks/useFirestore';
 import { FirebaseUser, upsertUserReminder } from '@/lib/firestore';
 import { toast } from 'sonner';
 
@@ -30,6 +30,7 @@ const SUBSCRIPTION_PLANS = [
 
 export const EditUserModal = ({ open, onOpenChange, user }: EditUserModalProps) => {
   const updateUserMutation = useUpdateUser();
+  const resetPasswordMutation = useResetUserPassword();
   
   const [formData, setFormData] = useState({
     email: '',
@@ -42,6 +43,7 @@ export const EditUserModal = ({ open, onOpenChange, user }: EditUserModalProps) 
     dueDate: null as Date | null,
     planStatus: 'active' as 'active' | 'expired' | 'pending',
     reminderDays: 3,
+    newPassword: '', // Add password field
   });
 
   // Populate form when user changes
@@ -61,6 +63,7 @@ export const EditUserModal = ({ open, onOpenChange, user }: EditUserModalProps) 
         dueDate,
         planStatus: user.plan.status,
         reminderDays: 3, // Default reminder days
+        newPassword: '', // Reset password field
       });
     }
   }, [user]);
@@ -95,6 +98,20 @@ export const EditUserModal = ({ open, onOpenChange, user }: EditUserModalProps) 
       };
 
       await updateUserMutation.mutateAsync({ id: user.id, updates });
+      
+      // Handle password reset if provided
+      if (formData.newPassword && formData.newPassword.length >= 6) {
+        try {
+          await resetPasswordMutation.mutateAsync({ 
+            userId: user.id, 
+            newPassword: formData.newPassword 
+          });
+          console.log('[ADMIN] Password reset for user:', user.email);
+        } catch (passwordError) {
+          console.error('Error resetting password:', passwordError);
+          // Don't fail the user update if password reset fails
+        }
+      }
       
       // Handle reminder updates
       if (formData.dueDate && formData.reminderDays > 0) {
@@ -298,6 +315,31 @@ export const EditUserModal = ({ open, onOpenChange, user }: EditUserModalProps) 
                   />
                 </PopoverContent>
               </Popover>
+            </div>
+          </div>
+
+          {/* Admin Password Reset Section */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Admin Actions</h3>
+            
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+              <p className="text-sm text-yellow-800">
+                <strong>Password Reset:</strong> Leave blank to keep current password. Enter a new password to reset it immediately.
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="edit-newPassword">Reset User Password (Optional)</Label>
+              <Input
+                id="edit-newPassword"
+                type="password"
+                value={formData.newPassword}
+                onChange={(e) => setFormData(prev => ({ ...prev, newPassword: e.target.value }))}
+                placeholder="Enter new password to reset (min 6 characters)"
+              />
+              <p className="text-xs text-muted-foreground">
+                If provided, user will need to sign in with this new password.
+              </p>
             </div>
           </div>
         </form>

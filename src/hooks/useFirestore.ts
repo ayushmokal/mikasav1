@@ -17,7 +17,11 @@ import {
   deleteReminder,
   markReminderAsSent,
   getUserReminders,
-  Reminder
+  Reminder,
+  resetUserPassword,
+  forcePasswordChange,
+  toggleUserStatus,
+  getUserLoginHistory
 } from '@/lib/firestore';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -227,6 +231,50 @@ export const useMarkReminderAsSent = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reminders'] });
     },
+  });
+};
+
+// Admin password management hooks
+export const useResetUserPassword = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ userId, newPassword }: { userId: string; newPassword: string }) =>
+      resetUserPassword(userId, newPassword),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+  });
+};
+
+export const useForcePasswordChange = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: forcePasswordChange,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+  });
+};
+
+export const useToggleUserStatus = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ userId, isActive }: { userId: string; isActive: boolean }) =>
+      toggleUserStatus(userId, isActive),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+  });
+};
+
+export const useUserLoginHistory = (userId: string) => {
+  return useQuery({
+    queryKey: ['user-login-history', userId],
+    queryFn: () => getUserLoginHistory(userId),
+    enabled: !!userId,
   });
 };
 
