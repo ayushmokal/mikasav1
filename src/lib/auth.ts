@@ -7,7 +7,8 @@ import {
   sendPasswordResetEmail,
   onAuthStateChanged
 } from 'firebase/auth';
-import { auth } from './firebase';
+import { collection, query, where, getDocs, addDoc, Timestamp, updateDoc, doc, deleteField, setDoc } from 'firebase/firestore';
+import { auth, db } from './firebase';
 
 export interface AuthUser {
   uid: string;
@@ -77,9 +78,6 @@ export const signIn = async (email: string, password: string): Promise<AuthUser>
         console.log('[AUTH] Auth account missing/invalid. Checking invited users in Firestore...');
         
         // Check if user exists in Firestore with this email
-        const { collection, query, where, getDocs, addDoc, Timestamp } = await import('firebase/firestore');
-        const { db } = await import('./firebase');
-        
         const q = query(collection(db, 'users'), where('email', '==', email));
         const querySnapshot = await getDocs(q);
         
@@ -111,7 +109,6 @@ export const signIn = async (email: string, password: string): Promise<AuthUser>
           const newUser = userCredential.user;
 
           // Update the user document with the real UID
-          const { updateDoc, doc, deleteField, setDoc } = await import('firebase/firestore');
           await updateDoc(doc(db, 'users', userDoc.id), {
             uid: newUser.uid,
             // Remove the stored login password once Auth account is provisioned

@@ -10,9 +10,11 @@ import {
   where,
   orderBy,
   Timestamp,
-  writeBatch
+  writeBatch,
+  setDoc
 } from 'firebase/firestore';
-import { db } from './firebase';
+import { createUserWithEmailAndPassword, updateProfile, signOut, signInWithEmailAndPassword, updatePassword } from 'firebase/auth';
+import { db, auth } from './firebase';
 import { EmailMessage, InboxSettings } from './types';
 
 // User interface
@@ -81,10 +83,6 @@ export const createUserWithAuth = async (
   password: string
 ): Promise<{ userId: string; authUid: string }> => {
   try {
-    // Import auth functions here to avoid circular dependencies
-    const { createUserWithEmailAndPassword, updateProfile } = await import('firebase/auth');
-    const { auth } = await import('./firebase');
-    
     // Store current user to restore later
     const currentUser = auth.currentUser;
     const wasSignedIn = !!currentUser;
@@ -115,7 +113,6 @@ export const createUserWithAuth = async (
     console.log('[AUTH] Firestore profile created successfully:', docRef.id);
     
     // Sign out the newly created user
-    const { signOut } = await import('firebase/auth');
     await signOut(auth);
     
     // Don't try to restore admin session automatically to avoid issues
@@ -137,9 +134,6 @@ export const createUserWithAuth = async (
         console.log('[AUTH] Email already in use, checking for existing profile...');
         
         // Try to sign in with the provided credentials to get the UID
-        const { signInWithEmailAndPassword, signOut } = await import('firebase/auth');
-        const { auth } = await import('./firebase');
-        
         const testCredential = await signInWithEmailAndPassword(auth, userData.email, password);
         const existingUid = testCredential.user.uid;
         
@@ -314,10 +308,6 @@ export const resetUserPassword = async (userId: string, newPassword: string): Pr
       throw new Error('User not found');
     }
 
-    // Import Firebase Auth admin functions
-    const { updatePassword, signInWithEmailAndPassword, signOut } = await import('firebase/auth');
-    const { auth } = await import('./firebase');
-    
     // Store current admin session
     const currentUser = auth.currentUser;
     

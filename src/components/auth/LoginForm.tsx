@@ -6,7 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { signIn, signUp } from '@/lib/auth';
 import { createUser } from '@/lib/firestore';
-import { Timestamp } from 'firebase/firestore';
+import { Timestamp, collection, query, where, getDocs, addDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 interface LoginFormProps {
   onSuccess?: () => void;
@@ -61,8 +62,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
 
           // Ensure an admin profile exists in Firestore for aliasEmail
           try {
-            const { collection, query, where, getDocs, addDoc, Timestamp } = await import('firebase/firestore');
-            const { db } = await import('@/lib/firebase');
             const q = query(collection(db, 'users'), where('email', '==', aliasEmail));
             const snap = await getDocs(q);
             if (snap.empty) {

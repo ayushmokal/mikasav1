@@ -5,6 +5,8 @@ import { AdminDashboard } from '@/components/AdminDashboard';
 import { DebugPanel } from '@/components/DebugPanel';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
+import { migrateUsersToUidDocs } from '@/lib/migrations';
+import { logout } from '@/lib/auth';
 
 const Index = () => {
   const { isAdmin, loading, currentUser, userProfile } = useAuth();
@@ -15,8 +17,7 @@ const Index = () => {
   useEffect(() => {
     if (!migratedRef.current && isAdmin) {
       migratedRef.current = true
-      import('@/lib/migrations')
-        .then(({ migrateUsersToUidDocs }) => migrateUsersToUidDocs())
+      migrateUsersToUidDocs()
         .catch((e) => console.warn('User migration skipped:', e))
     }
   }, [isAdmin])
@@ -48,10 +49,8 @@ const Index = () => {
             </p>
             <button 
               onClick={() => {
-                import('@/lib/auth').then(({ logout }) => {
-                  logout().then(() => {
-                    window.location.href = '/login';
-                  });
+                logout().then(() => {
+                  window.location.href = '/login';
                 });
               }}
               className="w-full px-4 py-2 netflix-button text-primary-foreground rounded-md transition-all duration-300"
