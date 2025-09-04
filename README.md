@@ -46,6 +46,24 @@ cp .env.example .env.local
 npm run dev
 ```
 
+### Environment Variables Setup
+
+Before running the application, you need to set up the required environment variables:
+
+1. Copy the example environment file:
+   ```bash
+   cp .env.example .env.local
+   ```
+
+2. Edit `.env.local` with your actual Firebase configuration values
+
+3. For Vercel deployment, use the provided script:
+   ```bash
+   ./add-env-vars.sh
+   ```
+
+For detailed setup instructions, see [ENVIRONMENT_SETUP.md](./ENVIRONMENT_SETUP.md)
+
 ### Firebase Setup
 
 1. Create a Firebase project at [Firebase Console](https://console.firebase.google.com/)
@@ -139,6 +157,8 @@ The application can be deployed to various platforms:
 - **Vercel**: Connect your GitHub repository
 - **Netlify**: Deploy via Git integration
 - **Firebase Hosting**: Use Firebase CLI
+
+For Vercel deployment troubleshooting, see [VERCEL_DEPLOYMENT.md](./VERCEL_DEPLOYMENT.md)
 
 ## Contributing
 

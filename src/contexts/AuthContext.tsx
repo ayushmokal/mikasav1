@@ -50,19 +50,41 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           console.log('[AUTH] Fetching user profile for UID:', user.uid);
           const startTime = Date.now();
           
-          // Fetch user profile from Firestore
-          let profile = await getUserByUid(user.uid);
+          // Fetch user profile from Firestore with timeout
+          let profile = null;
+          try {
+            profile = await Promise.race([
+              getUserByUid(user.uid),
+              new Promise<null>((_, reject) => 
+                setTimeout(() => reject(new Error('Profile fetch timeout')), 10000)
+              )
+            ]);
+          } catch (timeoutError) {
+            console.error('[AUTH] Profile fetch timed out or failed:', {
+              error: timeoutError instanceof Error ? timeoutError.message : 'Unknown error',
+              uid: user.uid,
+              email: user.email
+            });
+          }
           
           // If no profile exists, create one for this authenticated user
           let wasCreated = false;
           if (!profile) {
             console.log('[AUTH] No profile found, creating profile for authenticated user');
-            profile = await createProfileForAuthUser({
-              uid: user.uid,
-              email: user.email!,
-              displayName: user.displayName
-            });
-            wasCreated = true;
+            try {
+              profile = await createProfileForAuthUser({
+                uid: user.uid,
+                email: user.email!,
+                displayName: user.displayName
+              });
+              wasCreated = true;
+            } catch (creationError) {
+              console.error('[AUTH] Error creating profile:', {
+                error: creationError instanceof Error ? creationError.message : 'Unknown error',
+                uid: user.uid,
+                email: user.email
+              });
+            }
           }
           
           const fetchTime = Date.now() - startTime;

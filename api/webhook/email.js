@@ -28,13 +28,20 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  if (req.method !== 'POST') {
+  // Accept POST (preferred) and GET (fallback for services that only support query params)
+  if (req.method !== 'POST' && req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
+    // Merge query params into body so we can support providers that send data via query string
+    const payload = {
+      ...(typeof req.body === 'object' ? req.body : {}),
+      ...(req.query || {})
+    };
+
     // Extract receiving address from query params or body
-    const receivingAddress = req.query.address || req.body.receivingAddress;
+    const receivingAddress = payload.address || payload.receivingAddress;
     
     if (!receivingAddress) {
       return res.status(400).json({ error: 'Receiving address is required' });
@@ -42,8 +49,8 @@ export default async function handler(req, res) {
 
     console.log('Email webhook received for:', receivingAddress);
 
-    // Parse email data from webhook payload
-    const emailData = parseEmailWebhook(req.body, req.headers);
+    // Parse email data from webhook payload (merged body + query)
+    const emailData = parseEmailWebhook(payload, req.headers);
     
     if (!emailData) {
       return res.status(400).json({ error: 'Invalid email data' });
@@ -141,6 +148,11 @@ export default async function handler(req, res) {
 // Parse email webhook payload (same as Firebase function)
 function parseEmailWebhook(body, headers) {
   try {
+    // If provider sent JSON as a string in a single field (rare), try to parse it
+    if (typeof body === 'string') {
+      try { body = JSON.parse(body); } catch (_) {}
+    }
+
     // Generic format
     if (body.from && body.subject !== undefined) {
       return {
@@ -177,20 +189,40 @@ function parseEmailWebhook(body, headers) {
       };
     }
 
-    // InstAddr-style format (for the screenshot you showed)
-    if (body.content && body.username) {
-      // Parse InstAddr webhook format
-      const lines = body.content.split('\n');
-      const subject = lines.find(line => line.includes('subject'))?.split('#')[1]?.split('\\n')[0] || 'No Subject';
-      const textBody = lines.find(line => line.includes('textbody'))?.split('#')[1]?.split('\\n')[0] || '';
-      
+    // InstAddr-style format
+    // Common configuration uses:
+    //   content: "#subject#\n#textbody#"
+    //   username: "#from#"
+    // InstAddr replaces the tokens, so we typically get:
+    //   content: "Actual subject\nActual plain text body"
+    //   username: "sender@example.com" (or "Name <sender@example.com>")
+    if (typeof body.content === 'string' || typeof body.username === 'string') {
+      const content = (body.content ?? '').toString();
+      const username = (body.username ?? body.from ?? body.sender ?? '').toString();
+
+      // If content contains token names (e.g., "#subject#"), strip them. Otherwise
+      // treat first line as subject and the rest as body.
+      let subject = '';
+      let textBody = '';
+      if (/#subject#|#textbody#/i.test(content)) {
+        subject = content.replace(/^[^#]*#subject#/i, '').split(/\r?\n/)[0] ?? '';
+        textBody = content.split(/\r?\n/).slice(1).join('\n') || '';
+      } else {
+        const [firstLine, ...rest] = content.split(/\r?\n/);
+        subject = (firstLine || '').trim();
+        textBody = rest.join('\n').trim();
+      }
+
+      // Clean up username like "#from#name <email>" or plain email
+      const from = username.replace(/#from#/gi, '').trim();
+
       return {
-        from: body.username.replace('#from#', ''),
+        from,
         fromName: '',
-        subject: subject.replace('#', ''),
-        textBody: textBody.replace('#', ''),
-        htmlBody: '',
-        attachments: []
+        subject: subject || body.subject || 'No Subject',
+        textBody: textBody || body.text || '',
+        htmlBody: body.html || '',
+        attachments: parseAttachments(body.attachments || [])
       };
     }
 
