@@ -2,7 +2,8 @@
 // This replaces the Firebase Cloud Function for free deployment
 
 import { initializeApp, getApps } from 'firebase/app';
-import { getFirestore, collection, doc, getDoc, addDoc, updateDoc, query, where, getDocs, Timestamp } from 'firebase/firestore';
+import { getFirestore, collection, doc, addDoc, updateDoc, query, where, getDocs, Timestamp } from 'firebase/firestore';
+import admin from 'firebase-admin';
 
 // Initialize Firebase (Vercel will use environment variables)
 const firebaseConfig = {
@@ -14,9 +15,29 @@ const firebaseConfig = {
   appId: process.env.VITE_FIREBASE_APP_ID || process.env.NEXT_PUBLIC_FIREBASE_APP_ID
 };
 
-// Initialize Firebase only if not already initialized
+// Initialize Firebase Client SDK (used when Admin SDK credentials are not provided)
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-const db = getFirestore(app);
+const clientDb = getFirestore(app);
+
+// Optionally initialize Admin SDK if service account is provided
+let adminInitialized = false;
+try {
+  if (!admin.apps.length) {
+    if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+      const svc = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+      admin.initializeApp({ credential: admin.credential.cert(svc) });
+      adminInitialized = true;
+    } else if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+      admin.initializeApp({ credential: admin.credential.applicationDefault() });
+      adminInitialized = true;
+    }
+  } else {
+    adminInitialized = true;
+  }
+} catch (e) {
+  // Continue without admin; client SDK will be used (requires permissive rules)
+  adminInitialized = false;
+}
 
 export default async function handler(req, res) {
   // Enable CORS
@@ -57,17 +78,27 @@ export default async function handler(req, res) {
     }
 
     // Find user by account email (receiving address)
-    const usersQuery = query(
-      collection(db, 'users'), 
-      where('accountEmail', '==', receivingAddress)
-    );
-    const userSnapshot = await getDocs(usersQuery);
+    let userSnapshotDocs = [];
+    if (adminInitialized) {
+      const snap = await admin.firestore()
+        .collection('users')
+        .where('accountEmail', '==', receivingAddress)
+        .get();
+      userSnapshotDocs = snap.docs.map(d => ({ id: d.id, data: () => d.data() }));
+    } else {
+      const usersQuery = query(
+        collection(clientDb, 'users'), 
+        where('accountEmail', '==', receivingAddress)
+      );
+      const snap = await getDocs(usersQuery);
+      userSnapshotDocs = snap.docs;
+    }
     
-    if (userSnapshot.empty) {
+    if (!userSnapshotDocs || userSnapshotDocs.length === 0) {
       return res.status(404).json({ error: 'User not found for receiving address' });
     }
 
-    const userDoc = userSnapshot.docs[0];
+    const userDoc = userSnapshotDocs[0];
     const userData = userDoc.data();
     const userId = userDoc.id;
 
@@ -109,12 +140,31 @@ export default async function handler(req, res) {
       updatedAt: Timestamp.now()
     };
 
-    const emailRef = await addDoc(collection(db, 'emails'), emailDoc);
+    let emailId = '';
+    if (adminInitialized) {
+      const ref = await admin.firestore().collection('emails').add({
+        ...emailDoc,
+        // Convert Timestamps to Admin timestamps
+        receivedAt: admin.firestore.Timestamp.now(),
+        createdAt: admin.firestore.Timestamp.now(),
+        updatedAt: admin.firestore.Timestamp.now(),
+      });
+      emailId = ref.id;
+    } else {
+      const ref = await addDoc(collection(clientDb, 'emails'), emailDoc);
+      emailId = ref.id;
+    }
     
     // Update daily forwarding count
-    await updateDoc(doc(db, 'users', userId), {
-      'inboxSettings.dailyForwardingCount': dailyCount + 1
-    });
+    if (adminInitialized) {
+      await admin.firestore().collection('users').doc(userId).update({
+        'inboxSettings.dailyForwardingCount': dailyCount + 1
+      });
+    } else {
+      await updateDoc(doc(clientDb, 'users', userId), {
+        'inboxSettings.dailyForwardingCount': dailyCount + 1
+      });
+    }
     
     // Process forwarding destinations
     if (userData.inboxSettings.forwardingDestinations && 
@@ -127,7 +177,7 @@ export default async function handler(req, res) {
     }
     
     console.log('Email stored successfully', {
-      emailId: emailRef.id,
+      emailId,
       userId,
       subject: emailData.subject,
       from: emailData.from
@@ -135,7 +185,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       success: true,
-      emailId: emailRef.id,
+      emailId,
       message: 'Email processed successfully'
     });
 
