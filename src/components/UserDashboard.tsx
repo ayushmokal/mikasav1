@@ -12,6 +12,7 @@ import { auth } from "@/lib/firebase";
 import { toast } from "sonner";
 import { format, parseISO, differenceInDays } from "date-fns";
 import { InboxManagement } from "@/components/InboxManagement";
+import { PageHeader } from "@/components/PageHeader";
 
 export const UserDashboard = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -93,56 +94,64 @@ export const UserDashboard = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">My Subscription</h1>
-          <p className="text-muted-foreground">
-            Manage your subscription and account details
-          </p>
-        </div>
-        <Dialog open={changePasswordOpen} onOpenChange={setChangePasswordOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline">
-              <Shield className="mr-2 h-4 w-4" />
-              Change Password
+      <PageHeader
+        title="My Subscription"
+        subtitle="Manage your subscription and account details"
+        actions={(
+          <div className="flex flex-wrap gap-2">
+            <Button asChild className="bg-gradient-primary">
+              <a href="#inbox"><Mail className="mr-2 h-4 w-4" /> Inbox</a>
             </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Change Password</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="newPassword">New Password</Label>
-                <Input
-                  id="newPassword"
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Enter new password"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Confirm new password"
-                />
-              </div>
-              <Button 
-                onClick={handlePasswordChange}
-                disabled={isChangingPassword}
-                className="w-full"
-              >
-                {isChangingPassword && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Update Password
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            <Dialog open={changePasswordOpen} onOpenChange={setChangePasswordOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <Shield className="mr-2 h-4 w-4" />
+                  Change Password
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Change Password</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="newPassword">New Password</Label>
+                    <Input
+                      id="newPassword"
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Enter new password"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword">Confirm Password</Label>
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Confirm new password"
+                    />
+                  </div>
+                  <Button 
+                    onClick={handlePasswordChange}
+                    disabled={isChangingPassword}
+                    className="w-full"
+                  >
+                    {isChangingPassword && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Update Password
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        )}
+      />
+
+      {/* Primary focus: Inbox at the top */}
+      <div id="inbox" className="scroll-mt-24 rounded-lg ring-1 ring-primary/20 shadow-card">
+        <InboxManagement />
       </div>
 
       {/* First Login Warning */}
@@ -236,18 +245,19 @@ export const UserDashboard = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
+          {/* Stack fields on all screens to ensure visibility */}
+          <div className="grid gap-4">
             <div>
               <label className="text-sm font-medium text-muted-foreground">Email</label>
               <div className="mt-1 p-3 bg-accent rounded-md border">
-                <code className="text-sm">{userProfile.accountEmail}</code>
+                <code className="text-sm break-all">{userProfile.accountEmail}</code>
               </div>
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Password</label>
               <div className="mt-1 flex items-center gap-2">
                 <div className="flex-1 p-3 bg-accent rounded-md border">
-                  <code className="text-sm">
+                  <code className="text-sm break-all">
                     {showPassword ? userProfile.accountPassword : '••••••••••••'}
                   </code>
                 </div>
@@ -263,22 +273,21 @@ export const UserDashboard = () => {
           </div>
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
             <p className="text-sm text-blue-800">
-              <strong>Note:</strong> These are your {userProfile.plan.name} account credentials. Use them to log into the service directly.
+              <strong>Tip:</strong> Use this email to sign in and choose
+              <span className="px-1 font-semibold">"Use a sign-in code"</span>.
+              Your one-time code (OTP) will arrive in the inbox section below.
             </p>
           </div>
         </CardContent>
       </Card>
 
-      {/* Email Inbox Section */}
-      <InboxManagement />
-
       {/* Quick Actions */}
-      <div className="flex gap-4">
-        <Button className="bg-gradient-primary">
+      <div className="flex flex-wrap gap-2 md:gap-4">
+        <Button className="bg-gradient-primary w-full sm:w-auto">
           <Settings className="mr-2 h-4 w-4" />
           Manage Subscription
         </Button>
-        <Button variant="outline">
+        <Button variant="outline" className="w-full sm:w-auto">
           Contact Support
         </Button>
       </div>

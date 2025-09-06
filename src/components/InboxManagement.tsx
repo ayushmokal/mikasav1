@@ -12,7 +12,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { 
   Mail, 
-  Forward, 
   Settings, 
   Eye, 
   EyeOff, 
@@ -22,8 +21,6 @@ import {
   AlertCircle,
   CheckCircle,
   Inbox,
-  Crown,
-  Filter,
   BarChart3
 } from "lucide-react";
 import { toast } from "sonner";
@@ -31,7 +28,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { updateInboxSettings, getUserEmails, getUnreadEmailCount } from "@/lib/firestore";
 import { InboxSettings, ForwardingDestination } from "@/lib/types";
 import { EmailInbox } from "@/components/EmailInbox";
-import { ForwardingDestinations } from "@/components/ForwardingDestinations";
+// Removed Destinations UI per product decision
 import { EmailTestUtils } from "@/components/EmailTestUtils";
 
 export const InboxManagement = () => {
@@ -138,7 +135,7 @@ export const InboxManagement = () => {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="inbox" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="w-full overflow-x-auto no-scrollbar">
           <TabsTrigger value="inbox" className="flex items-center gap-2">
             <Inbox className="h-4 w-4" />
             Inbox
@@ -147,17 +144,6 @@ export const InboxManagement = () => {
                 {unreadCount}
               </Badge>
             )}
-          </TabsTrigger>
-          <TabsTrigger value="destinations" className="flex items-center gap-2">
-            <Forward className="h-4 w-4" />
-            Destinations
-            {!settings.premiumFeaturesEnabled && (
-              <Crown className="h-3 w-3 ml-1" />
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="filters" className="flex items-center gap-2">
-            <Filter className="h-4 w-4" />
-            Filters
           </TabsTrigger>
           <TabsTrigger value="settings" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
@@ -169,70 +155,7 @@ export const InboxManagement = () => {
           <EmailInbox />
         </TabsContent>
         
-        <TabsContent value="destinations" className="mt-6">
-          <ForwardingDestinations
-            destinations={settings.forwardingDestinations}
-            onDestinationsChange={(destinations) => setSettings(prev => ({ ...prev, forwardingDestinations: destinations }))}
-            dailyLimit={settings.dailyForwardingLimit}
-            dailyCount={settings.dailyForwardingCount}
-            premiumEnabled={settings.premiumFeaturesEnabled}
-          />
-        </TabsContent>
         
-        <TabsContent value="filters" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Filter className="h-5 w-5" />
-                Email Filters
-                {!settings.premiumFeaturesEnabled && (
-                  <Badge variant="outline" className="flex items-center gap-1">
-                    <Crown className="h-3 w-3" />
-                    Premium
-                  </Badge>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {!settings.premiumFeaturesEnabled ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Filter className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <h3 className="text-lg font-medium mb-2">Premium Feature</h3>
-                  <p>Email filtering is available with premium plans</p>
-                  <Button className="mt-4" variant="outline">
-                    <Crown className="mr-2 h-4 w-4" />
-                    Upgrade to Premium
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <Alert>
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>
-                      Configure rules to automatically filter emails before forwarding. 
-                      Filtered emails will not count towards your daily limit.
-                    </AlertDescription>
-                  </Alert>
-                  
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label>Prevent forwarding already forwarded emails</Label>
-                      <Switch
-                        checked={settings.preventForwardedEmails}
-                        onCheckedChange={(checked) => 
-                          setSettings(prev => ({ ...prev, preventForwardedEmails: checked }))
-                        }
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Skip emails with "Fw:" or "Fwd:" in the subject line
-                    </p>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
         
         <TabsContent value="settings" className="mt-6">
           <div className="space-y-6">
@@ -284,7 +207,7 @@ export const InboxManagement = () => {
             <CardContent className="space-y-4">
               {/* Receiving Address Display */}
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                   <div>
                     <h3 className="font-semibold text-blue-800 mb-1">Receiving Address</h3>
                     <div className="flex items-center gap-2">
@@ -320,7 +243,7 @@ export const InboxManagement = () => {
               </div>
 
               {/* Settings Button */}
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 <Dialog open={inboxSettingsOpen} onOpenChange={setInboxSettingsOpen}>
                   <DialogTrigger asChild>
                     <Button variant="outline">
@@ -443,7 +366,7 @@ export const InboxManagement = () => {
                               </Button>
                             </div>
                             <div className="p-3 bg-muted rounded border font-mono text-sm">
-                              <pre>{generateWebhookQueries()}</pre>
+                              <pre className="whitespace-pre-wrap break-words">{generateWebhookQueries()}</pre>
                             </div>
                             <p className="text-xs text-muted-foreground">
                               Use these query parameters when setting up email forwarding from services like InstAddr

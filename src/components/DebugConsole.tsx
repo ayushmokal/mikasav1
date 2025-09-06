@@ -65,7 +65,7 @@ export const DebugConsole = () => {
 
   if (!isExpanded) {
     return (
-      <div className="fixed bottom-4 right-4 z-50">
+      <div className="fixed bottom-4 right-4 z-50 hidden sm:block">
         <Button
           variant="outline"
           size="sm"
@@ -81,7 +81,7 @@ export const DebugConsole = () => {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 w-96 max-h-96">
+    <div className="fixed bottom-4 right-4 z-50 w-96 max-h-96 hidden sm:block">
       <Card className="shadow-xl border-2">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">

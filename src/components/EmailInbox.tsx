@@ -124,7 +124,7 @@ export const EmailInbox = () => {
               />
             </div>
             
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <Button
                 size="sm"
                 variant={filter === 'all' ? 'default' : 'outline'}
@@ -250,7 +250,7 @@ export const EmailInbox = () => {
 
       {/* Email Detail Dialog */}
       <Dialog open={!!selectedEmail} onOpenChange={() => setSelectedEmail(null)}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+        <DialogContent className="sm:max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle className="truncate">{selectedEmail?.subject || 'No Subject'}</DialogTitle>
           </DialogHeader>
