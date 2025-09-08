@@ -1,4 +1,4 @@
-import { collection, query, where, getDocs, addDoc, Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, Timestamp, updateDoc, doc, getDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import { FirebaseUser } from './firestore';
 
@@ -11,7 +11,7 @@ export const createProfileForAuthUser = async (authUser: {
   try {
     console.log('[RECOVERY] Creating profile for authenticated user:', authUser.email);
     
-    // Check if profile already exists
+    // 1) Check if profile already exists by UID
     const q = query(collection(db, 'users'), where('uid', '==', authUser.uid));
     const existing = await getDocs(q);
     
@@ -21,7 +21,31 @@ export const createProfileForAuthUser = async (authUser: {
       return { id: doc.id, ...doc.data() } as FirebaseUser;
     }
     
-    // Create a complete user profile
+    // 2) No profile linked by UID. Check by email and link it instead of creating a duplicate
+    const byEmailQ = query(collection(db, 'users'), where('email', '==', authUser.email));
+    const byEmailSnap = await getDocs(byEmailQ);
+    if (!byEmailSnap.empty) {
+      // Prefer the first doc that doesn't have a valid uid yet
+      const candidate = byEmailSnap.docs.find(d => !(d.data() as any).uid || String((d.data() as any).uid).startsWith('temp_'))
+                        || byEmailSnap.docs[0];
+      const candidateId = candidate.id;
+      console.log('[RECOVERY] Found existing profile by email. Linking UID to avoid duplicate:', {
+        candidateId,
+        email: authUser.email
+      });
+      await updateDoc(doc(db, 'users', candidateId), {
+        uid: authUser.uid,
+        updatedAt: Timestamp.now(),
+      });
+      const updatedDocSnap = await getDoc(doc(db, 'users', candidateId));
+      if (updatedDocSnap.exists()) {
+        return { id: updatedDocSnap.id, ...updatedDocSnap.data() } as FirebaseUser;
+      }
+      // Fallback: return minimal info if fetch fails for some reason
+      return { id: candidateId, ...(candidate.data() as any) } as FirebaseUser;
+    }
+    
+    // 3) Create a complete user profile (no existing record)
     const userData: Omit<FirebaseUser, 'id' | 'createdAt' | 'updatedAt'> = {
       uid: authUser.uid,
       email: authUser.email,

@@ -77,7 +77,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Invalid email data' });
     }
 
-    // Find user by account email (receiving address)
+    // Find user(s) by account email (receiving address)
     let userSnapshotDocs = [];
     if (adminInitialized) {
       const snap = await admin.firestore()
@@ -95,98 +95,117 @@ export default async function handler(req, res) {
     }
     
     if (!userSnapshotDocs || userSnapshotDocs.length === 0) {
-      return res.status(404).json({ error: 'User not found for receiving address' });
+      return res.status(404).json({ error: 'No users found for receiving address' });
     }
 
-    const userDoc = userSnapshotDocs[0];
-    const userData = userDoc.data();
-    const userId = userDoc.id;
+    let processed = 0;
+    let skippedDisabled = 0;
+    let skippedRateLimit = 0;
+    const createdEmailIds = [];
 
-    if (!userData?.inboxSettings?.forwardingEnabled) {
-      return res.status(403).json({ error: 'Email forwarding not enabled for this user' });
-    }
+    for (const userDoc of userSnapshotDocs) {
+      const userData = userDoc.data();
+      const userId = userDoc.id;
 
-    // Check daily forwarding limit
-    const dailyCount = userData.inboxSettings.dailyForwardingCount || 0;
-    const dailyLimit = userData.inboxSettings.dailyForwardingLimit || 50;
-    
-    if (dailyCount >= dailyLimit) {
-      console.warn('Daily forwarding limit exceeded', { userId, dailyCount, dailyLimit });
-      return res.status(429).json({ error: 'Daily forwarding limit exceeded' });
-    }
-
-    // Check if email is already forwarded (prevent Fw:/Fwd: emails)
-    if (userData.inboxSettings.preventForwardedEmails && emailData.subject) {
-      const subject = emailData.subject.toLowerCase();
-      if (subject.startsWith('fw:') || subject.startsWith('fwd:')) {
-        console.log('Skipping already forwarded email', { userId, subject: emailData.subject });
-        return res.status(200).json({ success: true, message: 'Skipped forwarded email' });
+      if (!userData?.inboxSettings?.forwardingEnabled) {
+        skippedDisabled++;
+        continue; // Skip users who haven't enabled forwarding
       }
+
+      // Per-user daily forwarding limit
+      const dailyCount = userData.inboxSettings.dailyForwardingCount || 0;
+      const dailyLimit = userData.inboxSettings.dailyForwardingLimit || 50;
+
+      if (dailyCount >= dailyLimit) {
+        console.warn('Daily forwarding limit exceeded', { userId, dailyCount, dailyLimit });
+        skippedRateLimit++;
+        continue;
+      }
+
+      // Prevent forwarding already-forwarded emails if configured
+      if (userData.inboxSettings.preventForwardedEmails && emailData.subject) {
+        const subject = emailData.subject.toLowerCase();
+        if (subject.startsWith('fw:') || subject.startsWith('fwd:')) {
+          console.log('Skipping already forwarded email', { userId, subject: emailData.subject });
+          skippedDisabled++; // treat as a skip for reporting
+          continue;
+        }
+      }
+
+      // Store email in Firestore for this user
+      const emailDoc = {
+        userId,
+        fromEmail: emailData.from,
+        fromName: emailData.fromName || '',
+        subject: emailData.subject || 'No Subject',
+        textBody: emailData.textBody || '',
+        htmlBody: emailData.htmlBody || '',
+        receivedAt: Timestamp.now(),
+        isRead: userData.inboxSettings.autoMarkAsRead || false,
+        isStarred: false,
+        attachments: emailData.attachments || [],
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now()
+      };
+
+      let emailId = '';
+      if (adminInitialized) {
+        const ref = await admin.firestore().collection('emails').add({
+          ...emailDoc,
+          receivedAt: admin.firestore.Timestamp.now(),
+          createdAt: admin.firestore.Timestamp.now(),
+          updatedAt: admin.firestore.Timestamp.now(),
+        });
+        emailId = ref.id;
+      } else {
+        const ref = await addDoc(collection(clientDb, 'emails'), emailDoc);
+        emailId = ref.id;
+      }
+      createdEmailIds.push({ userId, emailId });
+
+      // Update per-user daily forwarding count
+      if (adminInitialized) {
+        await admin.firestore().collection('users').doc(userId).update({
+          'inboxSettings.dailyForwardingCount': dailyCount + 1
+        });
+      } else {
+        await updateDoc(doc(clientDb, 'users', userId), {
+          'inboxSettings.dailyForwardingCount': dailyCount + 1
+        });
+      }
+
+      // Process forwarding destinations for this user
+      if (userData.inboxSettings.forwardingDestinations && 
+          userData.inboxSettings.forwardingDestinations.length > 0) {
+        await processForwardingDestinations(
+          userData.inboxSettings.forwardingDestinations, 
+          emailData, 
+          userId
+        );
+      }
+
+      processed++;
     }
 
-    // Store email in Firestore
-    const emailDoc = {
-      userId,
-      fromEmail: emailData.from,
-      fromName: emailData.fromName || '',
-      subject: emailData.subject || 'No Subject',
-      textBody: emailData.textBody || '',
-      htmlBody: emailData.htmlBody || '',
-      receivedAt: Timestamp.now(),
-      isRead: userData.inboxSettings.autoMarkAsRead || false,
-      isStarred: false,
-      attachments: emailData.attachments || [],
-      createdAt: Timestamp.now(),
-      updatedAt: Timestamp.now()
-    };
-
-    let emailId = '';
-    if (adminInitialized) {
-      const ref = await admin.firestore().collection('emails').add({
-        ...emailDoc,
-        // Convert Timestamps to Admin timestamps
-        receivedAt: admin.firestore.Timestamp.now(),
-        createdAt: admin.firestore.Timestamp.now(),
-        updatedAt: admin.firestore.Timestamp.now(),
-      });
-      emailId = ref.id;
-    } else {
-      const ref = await addDoc(collection(clientDb, 'emails'), emailDoc);
-      emailId = ref.id;
-    }
-    
-    // Update daily forwarding count
-    if (adminInitialized) {
-      await admin.firestore().collection('users').doc(userId).update({
-        'inboxSettings.dailyForwardingCount': dailyCount + 1
-      });
-    } else {
-      await updateDoc(doc(clientDb, 'users', userId), {
-        'inboxSettings.dailyForwardingCount': dailyCount + 1
-      });
-    }
-    
-    // Process forwarding destinations
-    if (userData.inboxSettings.forwardingDestinations && 
-        userData.inboxSettings.forwardingDestinations.length > 0) {
-      await processForwardingDestinations(
-        userData.inboxSettings.forwardingDestinations, 
-        emailData, 
-        userId
-      );
-    }
-    
-    console.log('Email stored successfully', {
-      emailId,
-      userId,
-      subject: emailData.subject,
-      from: emailData.from
+    console.log('Email processed for shared account recipients', {
+      receivingAddress,
+      processed,
+      skippedDisabled,
+      skippedRateLimit,
+      createdEmailIds
     });
+
+    if (processed === 0) {
+      return res.status(403).json({ error: 'No recipients enabled or all rate-limited' });
+    }
 
     return res.status(200).json({
       success: true,
-      emailId,
-      message: 'Email processed successfully'
+      processed,
+      skippedDisabled,
+      skippedRateLimit,
+      createdEmailIds,
+      message: 'Email processed for all eligible users'
     });
 
   } catch (error) {
