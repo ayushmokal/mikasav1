@@ -34,7 +34,7 @@ export const Navigation = ({ currentView, onViewChange }: NavigationProps) => {
   const navItems = isAdmin ? adminNavItems : userNavItems;
 
   return (
-    <Card className="w-64 h-screen bg-netflix-card shadow-elevated border-netflix-border rounded-none">
+    <Card className="relative w-64 h-screen bg-netflix-card shadow-elevated border-netflix-border rounded-none">
       <div className="p-6">
         <div className="mb-8">
           <Logo size="sm" glow={true} className="mb-2" />

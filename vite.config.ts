@@ -19,4 +19,22 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Separate Firebase into its own chunk
+          firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore'],
+          // Separate React/UI libraries
+          react: ['react', 'react-dom', 'react-router-dom'],
+          // Separate UI components
+          ui: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', 'lucide-react'],
+          // Separate query library
+          query: ['@tanstack/react-query'],
+        },
+      },
+    },
+    // Increase chunk size warning limit
+    chunkSizeWarningLimit: 600,
+  },
 }));

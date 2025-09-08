@@ -2,6 +2,12 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Helper to map emails.userId (Firestore user doc id) to the authenticated user
+    function isOwnerOfEmailDoc() {
+      return request.auth != null &&
+             exists(/databases/$(database)/documents/users/$(resource.data.userId)) &&
+             get(/databases/$(database)/documents/users/$(resource.data.userId)).data.uid == request.auth.uid;
+    }
     // Helper function to check if user is admin - more robust version
     function isAdmin() {
       return request.auth != null && 
@@ -59,6 +65,13 @@ service cloud.firestore {
     // Account Assignments collection - only admins can manage
     match /accountAssignments/{assignmentId} {
       allow read, write: if isAdmin();
+    }
+
+    // Emails collection - users can read/update/delete their own email docs
+    // Creation is handled by server-side code using Admin SDK (bypasses rules)
+    match /emails/{emailId} {
+      allow read, update, delete: if isOwnerOfEmailDoc();
+      allow create: if false; // prevent client-side creation
     }
     
     // Deny access to all other documents

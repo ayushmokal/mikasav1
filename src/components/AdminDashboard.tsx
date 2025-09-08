@@ -4,14 +4,16 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, DollarSign, TrendingUp, Activity, Loader2, Bell, UserPlus, Settings } from "lucide-react";
+import { Users, DollarSign, TrendingUp, Activity, Loader2, Bell, UserPlus, Settings, Shield, Key } from "lucide-react";
 import { useUsers, useDashboardStats, useUpdateUser, useDeleteUser } from "@/hooks/useFirestore";
 import { FirebaseUser } from "@/lib/firestore";
 import { CreateUserModal } from "@/components/modals/CreateUserModal";
 import { EditUserModal } from "@/components/modals/EditUserModal";
+import { UserManagementModal } from "@/components/modals/UserManagementModal";
 import { RemindersManagement } from "@/components/RemindersManagement";
 import { SubscriptionAccountManagement } from "@/components/SubscriptionAccountManagement";
 import { format, parseISO } from 'date-fns';
+import { PageHeader } from "@/components/PageHeader";
 
 export const AdminDashboard = () => {
   const { data: users, isLoading: usersLoading } = useUsers();
@@ -21,11 +23,17 @@ export const AdminDashboard = () => {
   
   const [createUserModalOpen, setCreateUserModalOpen] = useState(false);
   const [editUserModalOpen, setEditUserModalOpen] = useState(false);
+  const [userManagementModalOpen, setUserManagementModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<FirebaseUser | null>(null);
 
   const handleEditUser = (user: FirebaseUser) => {
     setSelectedUser(user);
     setEditUserModalOpen(true);
+  };
+
+  const handleManageUser = (user: FirebaseUser) => {
+    setSelectedUser(user);
+    setUserManagementModalOpen(true);
   };
 
   const handleDeleteUser = async (userId: string) => {
@@ -70,21 +78,16 @@ export const AdminDashboard = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
-          <p className="text-muted-foreground">
-            Manage users and monitor subscription metrics
-          </p>
-        </div>
-        <Button 
-          className="bg-gradient-primary"
-          onClick={() => setCreateUserModalOpen(true)}
-        >
-          <UserPlus className="mr-2 h-4 w-4" />
-          Add New User
-        </Button>
-      </div>
+      <PageHeader 
+        title="Admin Dashboard" 
+        subtitle="Manage users and monitor subscription metrics"
+        actions={(
+          <Button className="bg-gradient-primary" onClick={() => setCreateUserModalOpen(true)}>
+            <UserPlus className="mr-2 h-4 w-4" />
+            Add New User
+          </Button>
+        )}
+      />
 
       {/* Metrics Cards */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -143,7 +146,7 @@ export const AdminDashboard = () => {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="users" className="space-y-4">
-        <TabsList>
+        <TabsList className="w-full overflow-x-auto no-scrollbar">
           <TabsTrigger value="users">User Management</TabsTrigger>
           <TabsTrigger value="accounts">
             <Settings className="mr-2 h-4 w-4" />
@@ -162,7 +165,8 @@ export const AdminDashboard = () => {
             </CardHeader>
             <CardContent>
               {users && users.length > 0 ? (
-                <Table>
+                <div className="w-full overflow-x-auto">
+                <Table className="min-w-[900px]">
                   <TableHeader>
                     <TableRow>
                       <TableHead>User Email</TableHead>
@@ -216,6 +220,15 @@ export const AdminDashboard = () => {
                               <Button 
                                 variant="outline" 
                                 size="sm"
+                                onClick={() => handleManageUser(user)}
+                                className="flex items-center gap-1"
+                              >
+                                <Shield className="h-3 w-3" />
+                                Manage
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
                                 onClick={() => handleDeleteUser(user.id!)}
                                 disabled={deleteUserMutation.isPending}
                               >
@@ -228,6 +241,7 @@ export const AdminDashboard = () => {
                     })}
                   </TableBody>
                 </Table>
+                </div>
               ) : (
                 <div className="text-center py-8">
                   <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -263,6 +277,12 @@ export const AdminDashboard = () => {
       <EditUserModal 
         open={editUserModalOpen} 
         onOpenChange={setEditUserModalOpen}
+        user={selectedUser}
+      />
+      
+      <UserManagementModal 
+        open={userManagementModalOpen} 
+        onOpenChange={setUserManagementModalOpen}
         user={selectedUser}
       />
     </div>

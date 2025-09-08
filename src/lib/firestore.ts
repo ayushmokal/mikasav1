@@ -10,9 +10,12 @@ import {
   where,
   orderBy,
   Timestamp,
-  writeBatch
+  writeBatch,
+  setDoc
 } from 'firebase/firestore';
-import { db } from './firebase';
+import { createUserWithEmailAndPassword, updateProfile, signOut, signInWithEmailAndPassword, updatePassword } from 'firebase/auth';
+import { db, auth } from './firebase';
+import { EmailMessage, InboxSettings } from './types';
 
 // User interface
 export interface FirebaseUser {
@@ -37,6 +40,7 @@ export interface FirebaseUser {
     daysBefore: number;
     lastSent?: string;
   };
+  inboxSettings?: InboxSettings;
   joinDate: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
@@ -79,30 +83,22 @@ export const createUserWithAuth = async (
   password: string
 ): Promise<{ userId: string; authUid: string }> => {
   try {
-    // Import auth functions here to avoid circular dependencies
-    const { createUserWithEmailAndPassword, updateProfile, signInWithEmailAndPassword, signOut } = await import('firebase/auth');
-    const { auth } = await import('./firebase');
-    
     // Store current user to restore later
     const currentUser = auth.currentUser;
+    const wasSignedIn = !!currentUser;
     
-    // Create Firebase Auth account
+    console.log('[AUTH] Creating new user with email:', userData.email);
+    
+    // Create Firebase Auth account directly
+    // If email already exists, Firebase will throw auth/email-already-in-use
     const userCredential = await createUserWithEmailAndPassword(auth, userData.email, password);
     const authUser = userCredential.user;
+    
+    console.log('[AUTH] Firebase Auth user created successfully:', authUser.uid);
     
     // Update display name if provided
     if (userData.displayName) {
       await updateProfile(authUser, { displayName: userData.displayName });
-    }
-    
-    // Sign out the newly created user to restore admin session
-    await signOut(auth);
-    
-    // Restore the original admin session if there was one
-    if (currentUser) {
-      // Note: We can't easily restore the session without the password
-      // This is a limitation of the current approach
-      console.log('Admin session was interrupted. You may need to log in again.');
     }
     
     // Create Firestore document with the Auth UID
@@ -114,13 +110,70 @@ export const createUserWithAuth = async (
     };
     
     const docRef = await addDoc(collection(db, 'users'), userDoc);
+    console.log('[AUTH] Firestore profile created successfully:', docRef.id);
+    
+    // Sign out the newly created user
+    await signOut(auth);
+    
+    // Don't try to restore admin session automatically to avoid issues
+    if (wasSignedIn) {
+      console.log('[AUTH] Admin will need to sign in again after user creation');
+    }
     
     return {
       userId: docRef.id,
       authUid: authUser.uid
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating user with auth:', error);
+    
+    // Handle specific Firebase Auth errors
+    if (error.code === 'auth/email-already-in-use') {
+      // Check if the existing Firebase Auth user has a Firestore profile
+      try {
+        console.log('[AUTH] Email already in use, checking for existing profile...');
+        
+        // Try to sign in with the provided credentials to get the UID
+        const testCredential = await signInWithEmailAndPassword(auth, userData.email, password);
+        const existingUid = testCredential.user.uid;
+        
+        console.log('[AUTH] Successfully signed in to existing account:', existingUid);
+        
+        // Check if they have a Firestore profile
+        const existingProfile = await getUserByUid(existingUid);
+        if (existingProfile) {
+          await signOut(auth);
+          throw new Error(`User with email ${userData.email} already exists with a complete profile`);
+        }
+        
+        // They have Firebase Auth but no Firestore profile - create profile
+        console.log('[AUTH] Found existing Firebase Auth user without profile, creating Firestore profile');
+        const userDoc = {
+          ...userData,
+          uid: existingUid,
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now()
+        };
+        
+        const docRef = await addDoc(collection(db, 'users'), userDoc);
+        console.log('[AUTH] Recovery profile created successfully:', docRef.id);
+        
+        // Sign out the session
+        await signOut(auth);
+        
+        return {
+          userId: docRef.id,
+          authUid: existingUid
+        };
+      } catch (recoveryError: any) {
+        console.error('[AUTH] Recovery attempt failed:', recoveryError);
+        if (recoveryError.code === 'auth/wrong-password' || recoveryError.code === 'auth/invalid-credential') {
+          throw new Error(`User with email ${userData.email} already exists but with a different password`);
+        }
+        throw recoveryError;
+      }
+    }
+    
     throw error;
   }
 };
@@ -244,7 +297,102 @@ export const getUsersByPlanStatus = async (status: 'active' | 'expired' | 'pendi
   }
 };
 
-// Batch operations for admin
+// Admin password management functions
+export const resetUserPassword = async (userId: string, newPassword: string): Promise<void> => {
+  try {
+    console.log('[ADMIN] Resetting password for user:', userId);
+    
+    // Get user document to find their UID
+    const userDoc = await getUserById(userId);
+    if (!userDoc) {
+      throw new Error('User not found');
+    }
+
+    // Store current admin session
+    const currentUser = auth.currentUser;
+    
+    if (userDoc.uid && userDoc.uid !== `temp_${Date.now()}`) {
+      // User has Firebase Auth account - attempt password reset
+      // Note: In a real app, you'd use Firebase Admin SDK for this
+      // For now, we'll store a temporary password for next login
+      await updateUser(userId, {
+        loginPassword: newPassword,
+        updatedAt: new Date() as any
+      });
+      
+      console.log('[ADMIN] Password reset completed - user must sign in with new password');
+    } else {
+      // User doesn't have Firebase Auth yet - set login password
+      await updateUser(userId, {
+        loginPassword: newPassword,
+        updatedAt: new Date() as any
+      });
+      
+      console.log('[ADMIN] Login password set for new user');
+    }
+  } catch (error) {
+    console.error('[ADMIN] Error resetting user password:', error);
+    throw error;
+  }
+};
+
+// Force user to change password on next login
+export const forcePasswordChange = async (userId: string): Promise<void> => {
+  try {
+    await updateUser(userId, {
+      loginPassword: undefined, // Clear existing password to force reset
+      updatedAt: new Date() as any
+    });
+    console.log('[ADMIN] User will be prompted to reset password on next login');
+  } catch (error) {
+    console.error('[ADMIN] Error forcing password change:', error);
+    throw error;
+  }
+};
+
+// Suspend/Activate user account
+export const toggleUserStatus = async (userId: string, isActive: boolean): Promise<void> => {
+  try {
+    const status = isActive ? 'active' : 'suspended';
+    const user = await getUserById(userId);
+    if (!user) throw new Error('User not found');
+
+    await updateUser(userId, {
+      plan: {
+        ...user.plan,
+        status: status as any
+      },
+      updatedAt: new Date() as any
+    });
+    
+    console.log(`[ADMIN] User ${isActive ? 'activated' : 'suspended'}:`, userId);
+  } catch (error) {
+    console.error('[ADMIN] Error toggling user status:', error);
+    throw error;
+  }
+};
+
+// Get user login history (mock - in real app this would track actual logins)
+export const getUserLoginHistory = async (userId: string): Promise<any[]> => {
+  try {
+    // In a real app, you'd have a separate collection for login history
+    const user = await getUserById(userId);
+    if (!user) return [];
+    
+    // Mock login history
+    return [
+      {
+        timestamp: new Date(),
+        ip: '192.168.1.1',
+        device: 'Chrome Browser',
+        success: true
+      }
+    ];
+  } catch (error) {
+    console.error('[ADMIN] Error getting login history:', error);
+    return [];
+  }
+};
 export const batchUpdateUsers = async (updates: Array<{ id: string; data: Partial<FirebaseUser> }>): Promise<void> => {
   try {
     const batch = writeBatch(db);
@@ -677,6 +825,158 @@ export const getAssignmentsByAccount = async (accountId: string): Promise<Accoun
     } as AccountAssignment));
   } catch (error) {
     console.error('Error fetching assignments by account:', error);
+    throw error;
+  }
+};
+
+// =================== EMAIL INBOX FUNCTIONS ===================
+
+// Create email message
+export const createEmailMessage = async (emailData: Omit<EmailMessage, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> => {
+  try {
+    const emailDoc = {
+      ...emailData,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now()
+    };
+    
+    const docRef = await addDoc(collection(db, 'emails'), emailDoc);
+    console.log('Email message created with ID:', docRef.id);
+    return docRef.id;
+  } catch (error) {
+    console.error('Error creating email message:', error);
+    throw error;
+  }
+};
+
+// Get user emails
+export const getUserEmails = async (userId: string, limit: number = 50): Promise<EmailMessage[]> => {
+  try {
+    const q = query(
+      collection(db, 'emails'),
+      where('userId', '==', userId),
+      orderBy('receivedAt', 'desc'),
+      // Note: Firebase has a limit of 100 documents per query
+    );
+    
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as EmailMessage[];
+  } catch (error) {
+    console.error('Error fetching user emails:', error);
+    throw error;
+  }
+};
+
+// Update email (mark as read, starred, etc.)
+export const updateEmailMessage = async (emailId: string, updates: Partial<EmailMessage>): Promise<void> => {
+  try {
+    const emailRef = doc(db, 'emails', emailId);
+    await updateDoc(emailRef, {
+      ...updates,
+      updatedAt: Timestamp.now()
+    });
+    console.log('Email updated:', emailId);
+  } catch (error) {
+    console.error('Error updating email:', error);
+    throw error;
+  }
+};
+
+// Delete email
+export const deleteEmailMessage = async (emailId: string): Promise<void> => {
+  try {
+    await deleteDoc(doc(db, 'emails', emailId));
+    console.log('Email deleted:', emailId);
+  } catch (error) {
+    console.error('Error deleting email:', error);
+    throw error;
+  }
+};
+
+// Update user inbox settings
+export const updateInboxSettings = async (userId: string, settings: InboxSettings): Promise<void> => {
+  try {
+    await updateUser(userId, {
+      inboxSettings: settings,
+      updatedAt: Timestamp.now()
+    });
+    console.log('Inbox settings updated for user:', userId);
+  } catch (error) {
+    console.error('Error updating inbox settings:', error);
+    throw error;
+  }
+};
+
+// Get unread email count
+export const getUnreadEmailCount = async (userId: string): Promise<number> => {
+  try {
+    const q = query(
+      collection(db, 'emails'),
+      where('userId', '==', userId),
+      where('isRead', '==', false)
+    );
+    
+    const snapshot = await getDocs(q);
+    return snapshot.size;
+  } catch (error) {
+    console.error('Error getting unread email count:', error);
+    return 0;
+  }
+};
+
+// Mark all emails as read
+export const markAllEmailsAsRead = async (userId: string): Promise<void> => {
+  try {
+    const q = query(
+      collection(db, 'emails'),
+      where('userId', '==', userId),
+      where('isRead', '==', false)
+    );
+    
+    const snapshot = await getDocs(q);
+    const batch = writeBatch(db);
+    
+    snapshot.docs.forEach(doc => {
+      batch.update(doc.ref, {
+        isRead: true,
+        updatedAt: Timestamp.now()
+      });
+    });
+    
+    await batch.commit();
+    console.log(`Marked ${snapshot.size} emails as read for user:`, userId);
+  } catch (error) {
+    console.error('Error marking emails as read:', error);
+    throw error;
+  }
+};
+
+// Clean up old emails based on retention policy
+export const cleanupOldEmails = async (userId: string, retentionDays: number): Promise<void> => {
+  try {
+    const cutoffDate = new Date(Date.now() - (retentionDays * 24 * 60 * 60 * 1000));
+    const q = query(
+      collection(db, 'emails'),
+      where('userId', '==', userId),
+      where('receivedAt', '<', Timestamp.fromDate(cutoffDate))
+    );
+    
+    const snapshot = await getDocs(q);
+    const batch = writeBatch(db);
+    
+    snapshot.docs.forEach(doc => {
+      batch.delete(doc.ref);
+    });
+    
+    if (snapshot.size > 0) {
+      await batch.commit();
+      console.log(`Cleaned up ${snapshot.size} old emails for user:`, userId);
+    }
+  } catch (error) {
+    console.error('Error cleaning up old emails:', error);
     throw error;
   }
 };

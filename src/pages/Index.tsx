@@ -2,9 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { UserDashboard } from '@/components/UserDashboard';
 import { AdminDashboard } from '@/components/AdminDashboard';
+import { MobileNav } from '@/components/MobileNav';
 import { DebugPanel } from '@/components/DebugPanel';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
+import { migrateUsersToUidDocs } from '@/lib/migrations';
+import { logout } from '@/lib/auth';
 
 const Index = () => {
   const { isAdmin, loading, currentUser, userProfile } = useAuth();
@@ -15,8 +18,7 @@ const Index = () => {
   useEffect(() => {
     if (!migratedRef.current && isAdmin) {
       migratedRef.current = true
-      import('@/lib/migrations')
-        .then(({ migrateUsersToUidDocs }) => migrateUsersToUidDocs())
+      migrateUsersToUidDocs()
         .catch((e) => console.warn('User migration skipped:', e))
     }
   }, [isAdmin])
@@ -48,10 +50,8 @@ const Index = () => {
             </p>
             <button 
               onClick={() => {
-                import('@/lib/auth').then(({ logout }) => {
-                  logout().then(() => {
-                    window.location.href = '/login';
-                  });
+                logout().then(() => {
+                  window.location.href = '/login';
                 });
               }}
               className="w-full px-4 py-2 netflix-button text-primary-foreground rounded-md transition-all duration-300"
@@ -107,14 +107,23 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-netflix-bg flex">
-      <Navigation 
-        currentView={currentView} 
-        onViewChange={setCurrentView} 
-      />
+    <div className="min-h-screen bg-netflix-bg flex flex-col md:flex-row">
+      {/* Mobile header with menu */}
+      <div className="md:hidden">
+        {/* Lazy import to avoid circular deps not needed; simple inline header */}
+        <MobileNav currentView={currentView} onViewChange={setCurrentView} />
+      </div>
+
+      {/* Sidebar navigation (desktop) */}
+      <div className="hidden md:block">
+        <Navigation 
+          currentView={currentView} 
+          onViewChange={setCurrentView} 
+        />
+      </div>
       
-      <div className="flex-1 p-8">
-        {renderContent()}
+      <div className="flex-1 p-4 md:p-8">
+        <div className="container max-w-6xl">{renderContent()}</div>
       </div>
     </div>
   );

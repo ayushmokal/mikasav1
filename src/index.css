@@ -124,12 +124,22 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground overflow-x-hidden;
   }
+}
+
+/* Prevent accidental horizontal scroll on desktop */
+#root {
+  width: 100%;
+  overflow-x: hidden;
 }
 
 /* Netflix Style Utilities */
 @layer utilities {
+  /* hide scrollbar utility for horizontal scroll containers */
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
   .netflix-glow {
     filter: drop-shadow(var(--shadow-logo));
     transition: var(--transition-netflix);

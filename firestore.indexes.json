@@ -1,11 +1,45 @@
 {
   "indexes": [
     {
-      "collectionGroup": "users",
+      "collectionGroup": "emails",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "receivedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "emails",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "isRead", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "reminders",
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "email",
+          "fieldPath": "userId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "reminderDate",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "reminders",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "sent",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "reminderDate",
           "order": "ASCENDING"
         }
       ]

@@ -7,7 +7,8 @@ import {
   sendPasswordResetEmail,
   onAuthStateChanged
 } from 'firebase/auth';
-import { auth } from './firebase';
+import { collection, query, where, getDocs, addDoc, Timestamp, updateDoc, doc, deleteField, setDoc } from 'firebase/firestore';
+import { auth, db } from './firebase';
 
 export interface AuthUser {
   uid: string;
@@ -39,33 +40,57 @@ export const signUp = async (email: string, password: string, displayName?: stri
 
 // Sign in with email and password
 export const signIn = async (email: string, password: string): Promise<AuthUser> => {
+  const signInStartTime = Date.now();
+  console.log('[AUTH] Sign in attempt started:', {
+    email,
+    timestamp: new Date().toISOString()
+  });
+  
   try {
     // First, try normal sign in
     try {
+      console.log('[AUTH] Attempting Firebase Auth sign in');
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       
-      return {
+      const authResult = {
         uid: user.uid,
         email: user.email!,
         displayName: user.displayName || undefined,
         role: 'user' // This would typically be fetched from Firestore
       };
+      
+      console.log('[AUTH] Firebase Auth sign in successful:', {
+        uid: user.uid,
+        email: user.email,
+        timeMs: Date.now() - signInStartTime
+      });
+      
+      return authResult;
     } catch (signInError: any) {
+      console.log('[AUTH] Firebase Auth failed, checking Firestore for invited users:', {
+        errorCode: signInError.code,
+        errorMessage: signInError.message
+      });
+      
       // If sign in fails, check if it's because the user doesn't exist in Firebase Auth
       if (signInError.code === 'auth/user-not-found' || signInError.code === 'auth/invalid-credential') {
-        console.log('Auth account missing/invalid. Checking invited users in Firestore...');
+        console.log('[AUTH] Auth account missing/invalid. Checking invited users in Firestore...');
         
         // Check if user exists in Firestore with this email
-        const { collection, query, where, getDocs, addDoc, Timestamp } = await import('firebase/firestore');
-        const { db } = await import('./firebase');
-        
         const q = query(collection(db, 'users'), where('email', '==', email));
         const querySnapshot = await getDocs(q);
         
         if (!querySnapshot.empty) {
           const userDoc = querySnapshot.docs[0];
           const userData = userDoc.data();
+          
+          console.log('[AUTH] Found user in Firestore:', {
+            docId: userDoc.id,
+            email: userData.email,
+            role: userData.role,
+            hasLoginPassword: !!(userData as any).loginPassword
+          });
           
           // Only allow first-time auth creation if password matches admin-set loginPassword
           const expected = (userData as any).loginPassword as string | undefined;
@@ -79,12 +104,11 @@ export const signIn = async (email: string, password: string): Promise<AuthUser>
             throw new Error('Password must be at least 6 characters.');
           }
 
-          console.log('Provisioning Firebase Auth account for admin-created user...');
+          console.log('[AUTH] Provisioning Firebase Auth account for admin-created user...');
           const userCredential = await createUserWithEmailAndPassword(auth, email, expected);
           const newUser = userCredential.user;
 
           // Update the user document with the real UID
-          const { updateDoc, doc, deleteField, setDoc } = await import('firebase/firestore');
           await updateDoc(doc(db, 'users', userDoc.id), {
             uid: newUser.uid,
             // Remove the stored login password once Auth account is provisioned
@@ -102,7 +126,12 @@ export const signIn = async (email: string, password: string): Promise<AuthUser>
             await setDoc(doc(db, 'users', newUser.uid), adminDoc, { merge: true });
           }
 
-          console.log('Firebase Auth account created and user document updated');
+          console.log('[AUTH] Firebase Auth account created and user document updated:', {
+            uid: newUser.uid,
+            email: newUser.email,
+            role: userData.role,
+            timeMs: Date.now() - signInStartTime
+          });
 
           return {
             uid: newUser.uid,
@@ -114,7 +143,7 @@ export const signIn = async (email: string, password: string): Promise<AuthUser>
           // No Firestore user found. Support a dev admin bootstrap if using the alias email.
           if (email === 'admin@local.dev') {
             const bootstrapPassword = (typeof password === 'string' && password.length >= 6) ? password : 'adminadmin';
-            console.log('Bootstrapping local admin account in Auth + Firestore...');
+            console.log('[AUTH] Bootstrapping local admin account in Auth + Firestore...');
             const userCredential = await createUserWithEmailAndPassword(auth, email, bootstrapPassword);
             const newUser = userCredential.user;
 
@@ -132,6 +161,11 @@ export const signIn = async (email: string, password: string): Promise<AuthUser>
               updatedAt: Timestamp.now(),
             });
 
+            console.log('[AUTH] Admin bootstrap completed:', {
+              uid: newUser.uid,
+              email: newUser.email
+            });
+
             return {
               uid: newUser.uid,
               email: newUser.email!,
@@ -147,6 +181,12 @@ export const signIn = async (email: string, password: string): Promise<AuthUser>
       }
     }
   } catch (error) {
+    console.error('[AUTH] Sign in failed:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      email,
+      timeMs: Date.now() - signInStartTime,
+      timestamp: new Date().toISOString()
+    });
     throw error;
   }
 };

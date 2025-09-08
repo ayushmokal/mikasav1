@@ -1,11 +1,10 @@
-import { initializeApp } from 'firebase/app';
+import { initializeApp, FirebaseOptions } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 // Firebase configuration
-// Replace these values with your actual Firebase project configuration
-const firebaseConfig = {
+const firebaseConfig: FirebaseOptions = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
@@ -18,9 +17,14 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
+// Initialize Firestore with better caching and offline support
+const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+});
+
 // Initialize Firebase services
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+export { db };
 export const storage = getStorage(app);
 
 export default app;
